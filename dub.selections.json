@@ -1,0 +1,8 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"dlib": "1.1.0",
+		"dlog": "0.3.8",
+		"gogga": "2.1.16"
+	}
+}
