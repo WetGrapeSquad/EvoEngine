@@ -2,8 +2,10 @@ module evoengine.utils.containers.bitarray;
 import dlib.container.array;
 import dlib.core.bitio;
 
-struct FlagArray{
-    bool opIndexAssign(bool flag, size_t index) @property{
+struct FlagArray
+{
+    bool opIndexAssign(bool flag, size_t index) @property
+    {
         uint block = cast(uint) index / size_t.sizeof, bit;
         while(block >= this.data.length)
             this.data.insertBack(0);
@@ -22,7 +24,8 @@ struct FlagArray{
 
         return flag;
     }
-    bool opIndex(size_t index) @property{
+    bool opIndex(size_t index) @property
+    {
         uint block = cast(uint) index / size_t.sizeof, bit;
         if(block >= this.data.length)
             return false;
@@ -32,7 +35,8 @@ struct FlagArray{
         return data[block].getBit(bit);
     }
 
-    bool containAll(FlagArray array){
+    bool containAll(FlagArray array)
+    {
         if(this.data.length < array.data.length)
             return false;
         foreach(i, element; array.data){
@@ -42,7 +46,8 @@ struct FlagArray{
         return true;
     }
 
-    bool containAny(FlagArray array){
+    bool containAny(FlagArray array)
+    {
         import std.algorithm.comparison;
         size_t length = min(this.data.length, array.data.length);
 
@@ -58,11 +63,13 @@ struct FlagArray{
 
 unittest {
 
-    scope(success){
+    scope(success)
+    {
         import evoengine.utils.logging;
         globalLogger.info("Success");
     }
-    scope(failure){
+    scope(failure)
+    {
         import evoengine.utils.logging;
         globalLogger.error("Failure!");
     }

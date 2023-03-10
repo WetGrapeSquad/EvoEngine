@@ -3,6 +3,8 @@ import gogga;
 
 __gshared GoggaLogger globalLogger;
 
-shared static this(){
+shared static this()
+{
      globalLogger = new GoggaLogger();
 }
+

@@ -7,7 +7,8 @@ debug
 else 
     alias Allocator = MallocAllocator;
 
-struct MallocAllocator{
+struct MallocAllocator
+{
     static T[] alloc(T)(size_t length){
         import core.stdc.stdlib: malloc;
         T[] data = malloc(length * T.sizeof)[0..length];
@@ -19,7 +20,8 @@ struct MallocAllocator{
         }
         return data;
     }
-    static void free(T)(T[] data){
+    static void free(T)(T[] data)
+    {
         import core.stdc.stdlib: free;
         
         free(data.ptr);
@@ -28,10 +30,12 @@ struct MallocAllocator{
 
 /// TODO: Add leaks output and normal errors logging.
 
-class DebugWrapper(allocator){
+class DebugWrapper(allocator)
+{
     import std.datetime: Clock, SysTime;
 
-    struct AllocationData{
+    struct AllocationData
+    {
         string file;
         string func;
         ulong line;
@@ -39,7 +43,8 @@ class DebugWrapper(allocator){
         SysTime allocTime;
     }
 
-    static T[] alloc(T)(size_t length, string file = __FILE__, string func = __PRETTY_FUNCTION__, ulong line = __LINE__){
+    static T[] alloc(T)(size_t length, string file = __FILE__, string func = __PRETTY_FUNCTION__, ulong line = __LINE__)
+    {
         T[] data = allocator.alloc!T(length);
         AllocationData allocationData;
 
@@ -54,7 +59,8 @@ class DebugWrapper(allocator){
         return data;
     }
 
-    static void free(T)(T[] data){
+    static void free(T)(T[] data)
+    {
         synchronized(DebugWrapper.classinfo){
             AllocationData* record = ((cast(size_t)data.ptr) in this.allocation);
 
@@ -73,21 +79,27 @@ class DebugWrapper(allocator){
 }
 
 unittest {
-    scope(success){
+    scope(success)
+    {
         import evoengine.utils.logging;
         globalLogger.info("Success");
     }
-    scope(failure){
+    scope(failure)
+    {
         import evoengine.utils.logging;
         globalLogger.error("Failure!");
     }
 
     void[][] test; 
     test.length = 100_000;
-    foreach(ref element; test) {
+    
+    foreach(ref element; test) 
+    {
         element = Allocator.alloc!void(128);
     }
-    foreach(ref element; test) {
+
+    foreach(ref element; test) 
+    {
         Allocator.free(element);
     }
 }

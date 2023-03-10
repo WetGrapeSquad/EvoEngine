@@ -3,20 +3,24 @@ import evoengine.utils.memory.mallocator;
 import std.typecons: Tuple;
 import dlib.container.array;
 
-struct BlockType{
+struct BlockType
+{
     private size_t id;
     public void[] data;
 }
 
-class BlockAllocator{
+class BlockAllocator
+{
     private enum BlockSize = 128*1024;
     private enum NoneBlock = -1;
     public this(){}
 
-    public BlockType alloc(){
+    public BlockType alloc()
+    {
         BlockType block;
 
-        if(this.mFreeBlock == NoneBlock){
+        if(this.mFreeBlock == NoneBlock)
+        {
             BlockType newBlock;
             newBlock.data = Allocator.alloc!void(BlockSize);
             newBlock.id = NoneBlock;
@@ -25,7 +29,9 @@ class BlockAllocator{
             block.data = newBlock.data;
 
             this.mBlocks ~= newBlock;
-        }else{
+        }
+        else
+        {
             size_t freeBlock = this.mFreeBlock;
             this.mFreeBlock = this.mBlocks[freeBlock].id;
 
@@ -35,7 +41,8 @@ class BlockAllocator{
 
         return block;
     }
-    public void free(const BlockType block){
+    public void free(const BlockType block)
+    {
         BlockType tmp = this.mBlocks[block.id];
         tmp.id = this.mFreeBlock;
         this.mBlocks[block.id] = tmp;
@@ -43,18 +50,22 @@ class BlockAllocator{
         this.mFreeBlock = block.id;
     }
 
-    size_t blocksCount() pure{
+    size_t blocksCount() pure
+    {
         return this.mBlocks.length;
     }
-    size_t allocatedMemory() pure{
+    size_t allocatedMemory() pure
+    {
         return this.blocksCount * BlockSize;
     }
     
-    size_t blockSize() pure nothrow{
+    size_t blockSize() pure nothrow
+    {
         return BlockSize;
     }
 
-    ~this(){
+    ~this()
+    {
         import evoengine.utils.memory.mallocator;
         foreach(block; this.mBlocks){
             Allocator.free(block.data);
@@ -67,11 +78,13 @@ class BlockAllocator{
 
 
 unittest {
-    scope(success){
+    scope(success)
+    {
         import evoengine.utils.logging;
         globalLogger.info("Success");
     }
-    scope(failure){
+    scope(failure)
+    {
         import evoengine.utils.logging;
         globalLogger.error("Failure!");
     }
@@ -81,34 +94,45 @@ unittest {
     BlockType[] blocks;
     blocks.length = 100;
 
-    scope(exit){
+    scope(exit)
+    {
         Delete(blockAllocator);
     }
 
-    foreach(i; 0..10){
-        foreach(ref block; blocks){ // [0..$]
+    foreach(i; 0..10)
+    {
+        foreach(ref block; blocks) // [0..$]
+        { 
             block = blockAllocator.alloc;
         }
-        foreach(ref block; blocks[0..$/2]){ // [$/2..$]
+        foreach(ref block; blocks[0..$/2]) // [$/2..$]
+        { 
             blockAllocator.free(block);
         }
-        foreach(ref block; blocks[$/4..$/2]){ // [$/4..$]
+        foreach(ref block; blocks[$/4..$/2]) // [$/4..$]
+        {
             block = blockAllocator.alloc;
         }
-        foreach(ref block; blocks[$/2..$]){ // [$/4 .. $/2]
+        foreach(ref block; blocks[$/2..$]) // [$/4 .. $/2]
+        {
             blockAllocator.free(block);
         }
-        foreach(ref block; blocks[0..$/4]){ // [0 .. $/2]
+        foreach(ref block; blocks[0..$/4]) // [0 .. $/2]
+        {
             block = blockAllocator.alloc;
         }
-        foreach(ref block; blocks[$/2..$]){ // [0..$]
+        foreach(ref block; blocks[$/2..$]) // [0..$]
+        {
             block = blockAllocator.alloc;
         }
-        foreach(ref block; blocks){ // [0..0]
+        foreach(ref block; blocks) // [0..0]
+        {
             blockAllocator.free(block);
         }
     }
+    
     import std.conv: to;
+
     size_t blocksCount = blockAllocator.blocksCount;
     assert(blocksCount == blocks.length, "Blocks count equal " ~ blocksCount.to!string ~ " that more than " ~ blocks.length.to!string);
 }

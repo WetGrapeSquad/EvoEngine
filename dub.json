@@ -1,18 +1,21 @@
 {
+	"-ddoxFilterArgs": [
+		"--ex",
+		"evoengine.*",
+		"--unittest-examples",
+		"--min-protection=Protected"
+	],
 	"authors": [
 		"Gedert Korney Yakovlevich"
 	],
+	"copyright": "Copyright © 2023, Gedert Korney Yakovlevich. Made by WetGrape with ♥",
 	"dependencies": {
 		"dlib": "~>1.1.0",
-		"gogga": "~>2.1.16"
+		"gogga": "~>2.1.16",
+		"grimoire": "~>0.8.0"
 	},
-	"targetType": "staticLibrary",
-	"copyright": "Copyright © 2023, Gedert Korney Yakovlevich. Made by WetGrape with ♥",
 	"description": "A simple engine on D",
 	"license": "MIT",
-	"-ddoxFilterArgs": [
-		"--unittest-examples", "--min-protection=Protected",
-		"--ex", "evoengine.*"
-	],
-	"name": "evoengine"
+	"name": "evoengine",
+	"targetType": "staticLibrary"
 }
