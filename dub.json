@@ -3,11 +3,29 @@
 		"--ex",
 		"evoengine.*",
 		"--unittest-examples",
-		"--min-protection=Protected"
+		"--min-protection=Public"
 	],
 	"authors": [
 		"Gedert Korney Yakovlevich"
 	],
+	"importPaths": [
+		"."
+	],
+	
+	"configurations": [
+        {
+            "name": "library",
+            "targetType": "library",
+            "sourcePaths": ["evoengine"]
+        },
+        {
+            "name": "import",
+            "targetType": "sourceLibrary",
+            "sourceFiles-posix": ["libevoengine.a"],
+            "sourceFiles-windows": ["evoengine.lib"]
+        }
+    ],
+
 	"copyright": "Copyright © 2023, Gedert Korney Yakovlevich. Made by WetGrape with ♥",
 	"dependencies": {
 		"dlib": "~>1.1.0",

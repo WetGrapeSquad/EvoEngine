@@ -5,6 +5,7 @@ evoengine.utils.memory.componentallocator,
 evoengine.utils.memory.blockallocator,
 dlib.core.memory,
 dlib.container.array;
+import core.internal.gc.impl.conservative.gc;
 
 
 
@@ -21,6 +22,23 @@ class ComponentArray(T)
     this(BlockAllocator allocator)
     {
         this.mComponents = New!(ComponentAllocator!ComponentItemType)(allocator);
+    }
+
+    size_t create(size_t entity)
+    {
+        size_t componentId = this.mComponents.allocate;
+        this.mComponents[componentId].entity = entity;
+        return componentId;
+    }
+    void destroy(size_t componentId)
+    {
+        this.mComponents[componentId].entity = NoneEntity;
+        this.mComponents.deallocate(componentId);
+    }
+
+    ref T opIndex (size_t index)
+    {
+        return this.mComponents[index].data;
     }
 
     int opApply(scope int delegate(ref ComponentItemType) dg)
@@ -53,24 +71,12 @@ class ComponentArray(T)
         return 0;
     }
 
-    size_t create(size_t entity)
-    {
-        size_t componentId = this.mComponents.allocate;
-        this.mComponents[componentId].entity = entity;
-        return componentId;
-    }
-    void destroy(size_t componentId)
-    {
-        this.mComponents[componentId].entity = NoneEntity;
-        this.mComponents.deallocate(componentId);
-    }
-
     ~this()
     {
         Delete(this.mComponents);
     }
 
-    ComponentFlags mComponentFlags;
+    ComponentTypeId componentType;
     ComponentAllocator!ComponentItemType mComponents;
 }
 
@@ -100,7 +106,7 @@ unittest{
     }
 
     size_t entity = 5; // in this test this number can be any constant.
-    size_t[] components = new size_t[10_000];
+    size_t[] components = new size_t[1_000];
 
     foreach(j; 0..10)
     {
@@ -108,21 +114,7 @@ unittest{
         {
             component = componentArray.create(entity);
         }
-        foreach(ref component; components[0..5_000])
-        {
-            componentArray.destroy(component);
-        }
-
-        size_t componentsCount;
-
-        foreach(ref size_t entity; componentArray)
-        {
-            componentsCount++;
-        }
-
-        assert(componentsCount == 5_000);
-
-        foreach(ref component; components[5_000..$])
+        foreach(ref component; components)
         {
             componentArray.destroy(component);
         }

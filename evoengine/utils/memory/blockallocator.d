@@ -15,14 +15,14 @@ class BlockAllocator
     private enum NoneBlock = -1;
     public this(){}
 
-    public BlockType alloc()
+    public BlockType allocate()
     {
         BlockType block;
 
         if(this.mFreeBlock == NoneBlock)
         {
             BlockType newBlock;
-            newBlock.data = Allocator.alloc!void(BlockSize);
+            newBlock.data = Allocator.allocate!void(BlockSize);
             newBlock.id = NoneBlock;
 
             block.id = this.mBlocks.length;
@@ -41,7 +41,7 @@ class BlockAllocator
 
         return block;
     }
-    public void free(const BlockType block)
+    public void deallocate(const BlockType block)
     {
         BlockType tmp = this.mBlocks[block.id];
         tmp.id = this.mFreeBlock;
@@ -68,7 +68,7 @@ class BlockAllocator
     {
         import evoengine.utils.memory.mallocator;
         foreach(block; this.mBlocks){
-            Allocator.free(block.data);
+            Allocator.deallocate(block.data);
         }
     }
 
@@ -103,31 +103,31 @@ unittest {
     {
         foreach(ref block; blocks) // [0..$]
         { 
-            block = blockAllocator.alloc;
+            block = blockAllocator.allocate;
         }
         foreach(ref block; blocks[0..$/2]) // [$/2..$]
         { 
-            blockAllocator.free(block);
+            blockAllocator.deallocate(block);
         }
         foreach(ref block; blocks[$/4..$/2]) // [$/4..$]
         {
-            block = blockAllocator.alloc;
+            block = blockAllocator.allocate;
         }
         foreach(ref block; blocks[$/2..$]) // [$/4 .. $/2]
         {
-            blockAllocator.free(block);
+            blockAllocator.deallocate(block);
         }
         foreach(ref block; blocks[0..$/4]) // [0 .. $/2]
         {
-            block = blockAllocator.alloc;
+            block = blockAllocator.allocate;
         }
         foreach(ref block; blocks[$/2..$]) // [0..$]
         {
-            block = blockAllocator.alloc;
+            block = blockAllocator.allocate;
         }
         foreach(ref block; blocks) // [0..0]
         {
-            blockAllocator.free(block);
+            blockAllocator.deallocate(block);
         }
     }
     

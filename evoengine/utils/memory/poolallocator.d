@@ -79,7 +79,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     {
         this.mAllocator = allocator;
 
-        this.mBlock = this.mAllocator.alloc();
+        this.mBlock = this.mAllocator.allocate();
         this.mArray = this.mBlock.data.convertationWithTruncation!(void, Component);
     }
 
@@ -300,7 +300,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
         debug assert(allocator !is null, "Block allocator is null");
         this.mAllocator = allocator;
 
-        this.mBlock = this.mAllocator.alloc();
+        this.mBlock = this.mAllocator.allocate();
         this.mArray = this.mBlock.data.convertationWithTruncation!(void, ubyte);
 
         this.mElementSize = max(size_t.sizeof, size);
@@ -495,7 +495,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 }
 
 unittest {
-    import dlib.core.memory, std.stdio, std.datetime;
+    import dlib.core.memory;
     scope(success)
     {
         import evoengine.utils.logging;
@@ -510,6 +510,12 @@ unittest {
     BlockAllocator allocator = New!BlockAllocator;
     IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
     IPoolAllocator!(ubyte[]) sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator, cast(size_t)16);
+    
+    scope(exit){
+        Delete(poolAllocator);
+        Delete(sizedPoolAllocator);
+        Delete(allocator);
+    }
 
     size_t[] elements;
     elements.length = poolAllocator.avaliable;

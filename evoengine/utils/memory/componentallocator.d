@@ -64,17 +64,6 @@ class ComponentAllocator(T)
         this.mBlockAllocator = blockAllocator;
     }
 
-    /// Sort last block of clearflags list. Previous blocks sorting in putToClear.(TODO: IMPLEMENT)
-    deprecated private void sortLast()
-    {
-        
-    }
-    /// Sort all block of clearflags before used in this time.
-    deprecated private void sortBefore()
-    {
-
-    }
-
     /// Foreach all components
     public int opApply(scope int delegate(ref T component) dg)      /// WARNING: FOREACH MAY CALLS FOR CLEAR COMPONENT.
     {
@@ -148,9 +137,6 @@ class ComponentAllocator(T)
     
     private Array!ComponentsBlock mBlocks;
 }
-
-
-
 
 
 unittest{

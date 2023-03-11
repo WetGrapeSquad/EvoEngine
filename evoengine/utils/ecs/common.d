@@ -2,6 +2,7 @@ module evoengine.utils.ecs.common;
 import evoengine.utils.containers.bitarray;
 
 alias ComponentFlags = FlagArray;
+alias ComponentTypeId = size_t;
 alias EntityId = size_t;
 alias ComponentId = size_t;
 alias SystemId = size_t;

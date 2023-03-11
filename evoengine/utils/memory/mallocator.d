@@ -9,7 +9,7 @@ else
 
 struct MallocAllocator
 {
-    static T[] alloc(T)(size_t length){
+    static T[] allocate(T)(size_t length){
         import core.stdc.stdlib: malloc;
         T[] data = malloc(length * T.sizeof)[0..length];
 
@@ -20,7 +20,7 @@ struct MallocAllocator
         }
         return data;
     }
-    static void free(T)(T[] data)
+    static void deallocate(T)(T[] data)
     {
         import core.stdc.stdlib: free;
         
@@ -33,6 +33,7 @@ struct MallocAllocator
 class DebugWrapper(allocator)
 {
     import std.datetime: Clock, SysTime;
+    import std.logger.core;
 
     struct AllocationData
     {
@@ -43,9 +44,9 @@ class DebugWrapper(allocator)
         SysTime allocTime;
     }
 
-    static T[] alloc(T)(size_t length, string file = __FILE__, string func = __PRETTY_FUNCTION__, ulong line = __LINE__)
+    static T[] allocate(T)(size_t length, string file = __FILE__, string func = __PRETTY_FUNCTION__, ulong line = __LINE__)
     {
-        T[] data = allocator.alloc!T(length);
+        T[] data = allocator.allocate!T(length);
         AllocationData allocationData;
 
         allocationData.file = file;
@@ -54,15 +55,15 @@ class DebugWrapper(allocator)
         allocationData.allocTime = Clock.currTime;
 
         synchronized(DebugWrapper.classinfo){
-            this.allocation[cast(size_t) data.ptr] = allocationData;
+            this.gAllocations[cast(size_t) data.ptr] = allocationData;
         }
         return data;
     }
 
-    static void free(T)(T[] data)
+    static void deallocate(T)(T[] data)
     {
         synchronized(DebugWrapper.classinfo){
-            AllocationData* record = ((cast(size_t)data.ptr) in this.allocation);
+            AllocationData* record = ((cast(size_t)data.ptr) in this.gAllocations);
 
             scope(failure){
                 import evoengine.utils.logging;
@@ -73,9 +74,20 @@ class DebugWrapper(allocator)
             assert(!record.free, "Double free memory!");
             record.free = true;
         }
+
+        allocator.deallocate!T(data);
     }
 
-    static __gshared AllocationData[size_t] allocation;
+    shared static ~this(){
+        foreach(i, ref AllocationData data; gAllocations){
+            if(!data.free){
+                import evoengine.utils.logging;
+                globalLogger.warn!(string)("Leaks detected!", data.file, data.file, data.line, "", data.func, data.func);
+            }
+        }
+    }
+
+    static __gshared AllocationData[size_t] gAllocations;
 }
 
 unittest {
@@ -95,11 +107,11 @@ unittest {
     
     foreach(ref element; test) 
     {
-        element = Allocator.alloc!void(128);
+        element = Allocator.allocate!void(128);
     }
 
     foreach(ref element; test) 
     {
-        Allocator.free(element);
+        Allocator.deallocate(element);
     }
 }
