@@ -3,27 +3,31 @@ module evoengine.utils.memory.mallocator;
 /// TODO: Normal implement!!!
 
 debug
-    alias Allocator = DebugWrapper!MallocAllocator;
-else 
-    alias Allocator = MallocAllocator;
+alias Allocator = DebugWrapper!MallocAllocator;
+else alias Allocator = MallocAllocator;
 
 struct MallocAllocator
 {
-    static T[] allocate(T)(size_t length){
-        import core.stdc.stdlib: malloc;
-        T[] data = malloc(length * T.sizeof)[0..length];
+    static T[] allocate(T)(size_t length)
+    {
+        import core.stdc.stdlib : malloc;
 
-        static if(!is(T == void)){  /// TODO: Add optimization(memset like).
-            foreach(ref el; data){
+        T[] data = malloc(length * T.sizeof)[0 .. length];
+
+        static if (!is(T == void))
+        { /// TODO: Add optimization(memset like).
+            foreach (ref el; data)
+            {
                 el = T.init;
             }
         }
         return data;
     }
+
     static void deallocate(T)(T[] data)
     {
-        import core.stdc.stdlib: free;
-        
+        import core.stdc.stdlib : free;
+
         free(data.ptr);
     }
 }
@@ -32,7 +36,7 @@ struct MallocAllocator
 
 class DebugWrapper(allocator)
 {
-    import std.datetime: Clock, SysTime;
+    import std.datetime : Clock, SysTime;
     import std.logger.core;
 
     struct AllocationData
@@ -54,7 +58,8 @@ class DebugWrapper(allocator)
         allocationData.line = line;
         allocationData.allocTime = Clock.currTime;
 
-        synchronized(DebugWrapper.classinfo){
+        synchronized (DebugWrapper.classinfo)
+        {
             this.gAllocations[cast(size_t) data.ptr] = allocationData;
         }
         return data;
@@ -62,12 +67,15 @@ class DebugWrapper(allocator)
 
     static void deallocate(T)(T[] data)
     {
-        synchronized(DebugWrapper.classinfo){
-            AllocationData* record = ((cast(size_t)data.ptr) in this.gAllocations);
+        synchronized (DebugWrapper.classinfo)
+        {
+            AllocationData* record = ((cast(size_t) data.ptr) in this.gAllocations);
 
-            scope(failure){
+            scope (failure)
+            {
                 import evoengine.utils.logging;
-                globalLogger.error("Memory free error!"); 
+
+                globalLogger.error("Memory free error!");
             }
 
             assert(record, "Free not allocated memory!");
@@ -78,11 +86,16 @@ class DebugWrapper(allocator)
         allocator.deallocate!T(data);
     }
 
-    shared static ~this(){
-        foreach(i, ref AllocationData data; gAllocations){
-            if(!data.free){
+    shared static ~this()
+    {
+        foreach (i, ref AllocationData data; gAllocations)
+        {
+            if (!data.free)
+            {
                 import evoengine.utils.logging;
-                globalLogger.warn!(string)("Leaks detected!", data.file, data.file, data.line, "", data.func, data.func);
+
+                globalLogger.warn!(string)("Leaks detected!", data.file, data.file, data.line, "", data.func, data
+                        .func);
             }
         }
     }
@@ -90,27 +103,30 @@ class DebugWrapper(allocator)
     static __gshared AllocationData[size_t] gAllocations;
 }
 
-unittest {
-    scope(success)
+unittest
+{
+    scope (success)
     {
         import evoengine.utils.logging;
+
         globalLogger.info("Success");
     }
-    scope(failure)
+    scope (failure)
     {
         import evoengine.utils.logging;
+
         globalLogger.error("Failure!");
     }
 
-    void[][] test; 
+    void[][] test;
     test.length = 100_000;
-    
-    foreach(ref element; test) 
+
+    foreach (ref element; test)
     {
         element = Allocator.allocate!void(128);
     }
 
-    foreach(ref element; test) 
+    foreach (ref element; test)
     {
         Allocator.deallocate(element);
     }

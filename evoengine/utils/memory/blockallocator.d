@@ -1,6 +1,6 @@
 module evoengine.utils.memory.blockallocator;
 import evoengine.utils.memory.mallocator;
-import std.typecons: Tuple;
+import std.typecons : Tuple;
 import dlib.container.array;
 
 struct BlockType
@@ -11,15 +11,17 @@ struct BlockType
 
 class BlockAllocator
 {
-    private enum BlockSize = 128*1024;
+    private enum BlockSize = 128 * 1024;
     private enum NoneBlock = -1;
-    public this(){}
+    public this()
+    {
+    }
 
     public BlockType allocate()
     {
         BlockType block;
 
-        if(this.mFreeBlock == NoneBlock)
+        if (this.mFreeBlock == NoneBlock)
         {
             BlockType newBlock;
             newBlock.data = Allocator.allocate!void(BlockSize);
@@ -41,6 +43,7 @@ class BlockAllocator
 
         return block;
     }
+
     public void deallocate(const BlockType block)
     {
         BlockType tmp = this.mBlocks[block.id];
@@ -54,11 +57,12 @@ class BlockAllocator
     {
         return this.mBlocks.length;
     }
+
     size_t allocatedMemory() pure
     {
         return this.blocksCount * BlockSize;
     }
-    
+
     size_t blockSize() pure nothrow
     {
         return BlockSize;
@@ -67,7 +71,23 @@ class BlockAllocator
     ~this()
     {
         import evoengine.utils.memory.mallocator;
-        foreach(block; this.mBlocks){
+
+        debug
+        {
+            size_t freeCount;
+            for (size_t index = this.mFreeBlock; index != NoneBlock; index = this.mBlocks[index].id)
+            {
+                freeCount++;
+            }
+            if (freeCount != this.mBlocks.length())
+            {
+                import evoengine.utils.logging;
+
+                globalLogger.warn("Leaks Detected!", freeCount, this.mBlocks.length);
+            }
+        }
+        foreach (block; this.mBlocks)
+        {
             Allocator.deallocate(block.data);
         }
     }
@@ -76,63 +96,66 @@ class BlockAllocator
     private size_t mFreeBlock = NoneBlock;
 }
 
-
-unittest {
-    scope(success)
+unittest
+{
+    scope (success)
     {
         import evoengine.utils.logging;
+
         globalLogger.info("Success");
     }
-    scope(failure)
+    scope (failure)
     {
         import evoengine.utils.logging;
+
         globalLogger.error("Failure!");
     }
-    import dlib.core.memory: New, Delete;
+    import dlib.core.memory : New, Delete;
 
     BlockAllocator blockAllocator = New!BlockAllocator;
     BlockType[] blocks;
     blocks.length = 100;
 
-    scope(exit)
+    scope (exit)
     {
         Delete(blockAllocator);
     }
 
-    foreach(i; 0..10)
+    foreach (i; 0 .. 10)
     {
-        foreach(ref block; blocks) // [0..$]
-        { 
-            block = blockAllocator.allocate;
-        }
-        foreach(ref block; blocks[0..$/2]) // [$/2..$]
-        { 
-            blockAllocator.deallocate(block);
-        }
-        foreach(ref block; blocks[$/4..$/2]) // [$/4..$]
+        foreach (ref block; blocks) // [0..$]
         {
             block = blockAllocator.allocate;
         }
-        foreach(ref block; blocks[$/2..$]) // [$/4 .. $/2]
+        foreach (ref block; blocks[0 .. $ / 2]) // [$/2..$]
         {
             blockAllocator.deallocate(block);
         }
-        foreach(ref block; blocks[0..$/4]) // [0 .. $/2]
+        foreach (ref block; blocks[$ / 4 .. $ / 2]) // [$/4..$]
         {
             block = blockAllocator.allocate;
         }
-        foreach(ref block; blocks[$/2..$]) // [0..$]
+        foreach (ref block; blocks[$ / 2 .. $]) // [$/4 .. $/2]
+        {
+            blockAllocator.deallocate(block);
+        }
+        foreach (ref block; blocks[0 .. $ / 4]) // [0 .. $/2]
         {
             block = blockAllocator.allocate;
         }
-        foreach(ref block; blocks) // [0..0]
+        foreach (ref block; blocks[$ / 2 .. $]) // [0..$]
+        {
+            block = blockAllocator.allocate;
+        }
+        foreach (ref block; blocks) // [0..0]
         {
             blockAllocator.deallocate(block);
         }
     }
-    
-    import std.conv: to;
+
+    import std.conv : to;
 
     size_t blocksCount = blockAllocator.blocksCount;
-    assert(blocksCount == blocks.length, "Blocks count equal " ~ blocksCount.to!string ~ " that more than " ~ blocks.length.to!string);
+    assert(blocksCount == blocks.length, "Blocks count equal " ~ blocksCount.to!string ~ " that more than " ~ blocks
+            .length.to!string);
 }

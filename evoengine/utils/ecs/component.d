@@ -1,124 +1,280 @@
+/**
+* Implementation Component classes for ECS.
+*
+* Description:
+* This module contain classes for allocate and deallocate components for
+* enttities in ECS. ComponentArray isn't thread-safty and needed in thread synchronizations.
+* ECS is built so that it works as a separate thread - synchronizations using in communicating 
+* with him and communication with the systems inside.
+*
+*/
+
 module evoengine.utils.ecs.component;
-public import evoengine.utils.ecs.common;
-import 
-evoengine.utils.memory.componentallocator,
-evoengine.utils.memory.blockallocator,
+private import evoengine.utils.ecs.componentarray;
+
+import evoengine.utils.memory.blockallocator,
 dlib.core.memory,
-dlib.container.array;
-import core.internal.gc.impl.conservative.gc;
+dlib.container.array,
+dlib.container.dict;
 
-
-
-struct ComponentItem(T)
+/// TODO: Rewrite on PoolAllocator.
+class ComponentManager
 {
-    size_t entity;
-    T data;
-}
-
-class ComponentArray(T)
-{
-    alias ComponentItemType = ComponentItem!T;
-
-    this(BlockAllocator allocator)
+    this(BlockAllocator blockAllocator)
     {
-        this.mComponents = New!(ComponentAllocator!ComponentItemType)(allocator);
+        this.mBlockAllocator = blockAllocator;
+
+        this.mComponentArrays = dict!(IComponentArray, size_t);
+        this.mComponentNameById = dict!(string, size_t);
+        this.mComponentIdByName = dict!(size_t, string);
     }
 
-    size_t create(size_t entity)
+    size_t register(T)()
     {
-        size_t componentId = this.mComponents.allocate;
-        this.mComponents[componentId].entity = entity;
-        return componentId;
-    }
-    void destroy(size_t componentId)
-    {
-        this.mComponents[componentId].entity = NoneEntity;
-        this.mComponents.deallocate(componentId);
-    }
-
-    ref T opIndex (size_t index)
-    {
-        return this.mComponents[index].data;
-    }
-
-    int opApply(scope int delegate(ref ComponentItemType) dg)
-    {
-        foreach(ref component; this.mComponents){
-            int result = dg(component);
-            if(result)
-                return result;
-        }
-        return 0;
-    }
-    int opApply(scope int delegate(ref size_t) dg)
-    {
-        foreach(ref component; this.mComponents)
+        debug
         {
-            int result = dg(component.entity);
-            if(result)
-                return result;
+            size_t* id = mComponentIdByName.get(T.stringof);
+            assert(id == null, "Component " ~ T.stringof ~ " allready registered");
         }
-        return 0;
+
+        this.mComponentIdByName[T.stringof] = this.mLastId;
+        this.mComponentNameById[this.mLastId] = T.stringof;
+        this.mComponentArrays[this.mLastId] = New!(ComponentArray!T)(this.mBlockAllocator);
+
+        return this.mLastId++;
     }
-    int opApply(scope int delegate(ref T) dg)
+
+    size_t register(size_t size, string name)
     {
-        foreach(ref component; this.mComponents)
+        debug
         {
-            int result = dg(component.data);
-            if(result)
-                return result;
+            size_t* id = mComponentIdByName.get(name);
+            assert(id == null, "Component " ~ name ~ " allready registered");
         }
-        return 0;
+
+        this.mComponentIdByName[name] = this.mLastId;
+        this.mComponentNameById[this.mLastId] = name;
+        this.mComponentArrays[this.mLastId] = New!(SizedComponentArray)(this.mBlockAllocator, size);
+
+        return this.mLastId++;
+    }
+
+    void unregister(T)()
+    {
+        debug
+        {
+            size_t* id = mComponentIdByName.get(T.stringof);
+            assert(id != null, "Component " ~ T.stringof ~ " isn't registered");
+        }
+        size_t id = this.mComponentIdByName[T.stringof];
+
+        this.mComponentIdByName.remove(T.stringof);
+        this.mComponentNameById.remove(id);
+        this.mComponentArrays.remove(id);
+    }
+
+    void unregister(string name)
+    {
+        size_t id;
+        debug
+        {
+            size_t* tmp = mComponentIdByName.get(name);
+            assert(tmp != null, "Component " ~ name ~ " isn't registered");
+            id = *tmp;
+        }
+        else
+        {
+            id = this.mComponentIdByName[name];
+        }
+
+        this.mComponentIdByName.remove(name);
+        this.mComponentNameById.remove(id);
+        this.mComponentArrays.remove(id);
+    }
+
+    void unregister(size_t componentType)
+    {
+        string name;
+        debug
+        {
+            string* tmp = mComponentNameById.get(componentType);
+            assert(tmp != null, "Component " ~ name ~ " isn't registered");
+            name = *tmp;
+        }
+        else
+        {
+            name = this.mComponentNameById[componentType];
+        }
+
+        this.mComponentIdByName.remove(name);
+        this.mComponentNameById.remove(componentType);
+        this.mComponentArrays.remove(componentType);
+    }
+
+    size_t create(T)(size_t entity)
+    {
+        size_t id;
+        debug
+        {
+            size_t* tmp = mComponentIdByName.get(T.stringof);
+            assert(tmp != null, "Component " ~ T.stringof ~ " isn't registered");
+            id = *tmp;
+        }
+        else
+        {
+            id = this.mComponentIdByName[T.stringof];
+        }
+
+        return this.mComponentArrays[id].create(entity);
+    }
+
+    size_t create(string name, size_t entity)
+    {
+        size_t id;
+        debug
+        {
+            size_t* tmp = mComponentIdByName.get(name);
+            assert(tmp != null, "Component " ~ name ~ " isn't registered");
+            id = *tmp;
+        }
+        else
+        {
+            id = this.mComponentIdByName[name];
+        }
+
+        return this.mComponentArrays[id].create(entity);
+    }
+
+    size_t create(size_t componentType, size_t entity)
+    {
+        debug
+        {
+            import std.conv : to;
+
+            IComponentArray* tmp = mComponentArrays.get(componentType);
+            assert(tmp != null, "Component type with id " ~ componentType.to!string ~ " isn't registered");
+
+            return (*tmp).create(entity);
+        }
+        else
+        {
+            return this.mComponentArrays[componentType].create(entity);
+        }
+    }
+
+    void destroy(T)(size_t componentId)
+    {
+        size_t id;
+        debug
+        {
+            size_t* tmp = mComponentIdByName.get(T.stringof);
+            assert(tmp != null, "Component " ~ name ~ " isn't registered");
+            id = *tmp;
+        }
+        else
+        {
+            id = this.mComponentIdByName[T.stringof];
+        }
+
+        this.mComponentArrays[id].destroy(componentId);
+    }
+
+    void destroy(string name, size_t componentId)
+    {
+        size_t id;
+        debug
+        {
+            size_t* tmp = mComponentIdByName.get(name);
+            assert(tmp != null, "Component " ~ name ~ " isn't registered");
+            id = *tmp;
+        }
+        else
+        {
+            id = this.mComponentIdByName[name];
+        }
+
+        this.mComponentArrays[id].destroy(componentId);
+    }
+
+    void destroy(size_t componentType, size_t componentId)
+    {
+        debug
+        {
+            import std.conv : to;
+
+            IComponentArray* tmp = mComponentArrays.get(componentType);
+            assert(tmp != null, "Component type with id " ~ componentType.to!string ~ " isn't registered");
+
+            (*tmp).destroy(componentId);
+        }
+        else
+        {
+            this.mComponentArrays[componentType].destroy(componentId);
+        }
     }
 
     ~this()
     {
-        Delete(this.mComponents);
+        foreach (size_t, ref element; this.mComponentArrays)
+        {
+            Delete(element);
+        }
+        Delete(mComponentArrays);
+        Delete(mComponentNameById);
+        Delete(mComponentIdByName);
     }
 
-    ComponentTypeId componentType;
-    ComponentAllocator!ComponentItemType mComponents;
+    Dict!(IComponentArray, size_t) mComponentArrays;
+    Dict!(string, size_t) mComponentNameById;
+    Dict!(size_t, string) mComponentIdByName;
+
+    size_t mLastId;
+    BlockAllocator mBlockAllocator;
 }
 
-unittest{
+unittest
+{
     import evoengine.utils.logging;
 
-    struct TestStruct
+    struct Test
     {
         int i = 0;
     }
 
-    scope(success)
+    scope (success)
     {
         globalLogger.info("Success");
     }
-    scope(failure){
+    scope (failure)
+    {
         globalLogger.error("Failure!");
     }
 
     BlockAllocator blockAllocator = New!BlockAllocator;
-    ComponentArray!TestStruct componentArray = New!(ComponentArray!TestStruct)(blockAllocator);
-
-    scope(exit)
+    ComponentManager componentManager = New!ComponentManager(blockAllocator);
+    scope (exit)
     {
+        Delete(componentManager);
         Delete(blockAllocator);
-        Delete(componentArray);
     }
 
-    size_t entity = 5; // in this test this number can be any constant.
-    size_t[] components = new size_t[1_000];
+    componentManager.register!Test;
 
-    foreach(j; 0..10)
+    size_t entity = 5;
+    size_t[] components;
+    components.length = 1024;
+
+    foreach (i; 0 .. 10)
     {
-        foreach(ref component; components)
+        foreach (ref component; components)
         {
-            component = componentArray.create(entity);
-        }
-        foreach(ref component; components)
-        {
-            componentArray.destroy(component);
+            component = componentManager.create!Test(entity);
         }
     }
 }
 
-// 3_000
+/**
+* Copyright: WetGrape 2023.
+* License: MIT.
+* Authors: Gedert Korney
+*/

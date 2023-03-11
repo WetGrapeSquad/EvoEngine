@@ -7,4 +7,3 @@ shared static this()
 {
      globalLogger = new GoggaLogger();
 }
-
