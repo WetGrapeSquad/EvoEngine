@@ -88,13 +88,15 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     {
         assert(this.avaliable > 0, "No avaliable elements to allocate!");
 
-        this.actualFreeList = false;
         size_t index;
 
-        if(this.mFirstFree != NoneIndex){
+        if(this.mFirstFree != NoneIndex)
+        {
             index = this.mFirstFree;
             this.mFirstFree = this.mArray[this.mFirstFree].mNextFree;
-        }else{
+        }
+        else
+        {
             index = this.mLast;
             this.mLast++;
         }
@@ -105,11 +107,12 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     
     void deallocate(size_t index)
     {
-        this.actualFreeList = false;
+        this.mActualFreeList = false;
 
         debug(memory){
             assert(index < this.mArray.length, "Out of bounds.");
-            for(size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.mArray[iterator].mNextFree){
+            for(size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.mArray[iterator].mNextFree)
+            {
                 import std.conv: to;
                 assert(iterator != index, "Double free index [" ~ index.to!string ~ "].");
             }
@@ -122,8 +125,6 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     Array!size_t allocate(size_t count)
     {
         assert(this.avaliable >= count, "No avaliable elements to allocate!");
-
-        this.actualFreeList = false;
 
         Array!size_t indexArray;
         indexArray.reserve(count);
@@ -144,7 +145,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     
     void deallocate(size_t[] deallocate)
     {
-        this.actualFreeList = false;
+        this.mActualFreeList = false;
 
         debug(memory)
         {
@@ -181,37 +182,63 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
         return this.mAllocated;
     }
     
-    private void sortFreeList(){
-        if(!this.actualFreeList){
+    private void sortFreeList()
+    {
+        if(!this.mActualFreeList)
+        {
             import std.algorithm.sorting;
 
-            this.sortedFreeList.resize(0, 0);
-            this.sortedFreeList.reserve(this.mLast - this.mAllocated);
+            if(this.mFirstFree == NoneIndex) /// If freelist is empty then freelist allready sorted.
+            {   
+                this.mActualFreeList = true;
+                return;
+            }
 
+            /// Create and reserve array for sorting freearray
+            Array!size_t sortedFreeList;
+            sortedFreeList.reserve(this.mLast - this.mAllocated);
+
+            /// converting freelist to freearray
             size_t index = this.mFirstFree;
-
-            while(index != NoneIndex){
-                this.sortedFreeList ~= index;
+            while(index != NoneIndex)
+            {
+                sortedFreeList ~= index;
                 index = this.mArray[index].mNextFree;
             }
 
-            sort(this.sortedFreeList.data);
-            this.actualFreeList = true;
+            /// sorting.
+            sort(sortedFreeList.data);
+
+            /// converting sorted freearray to freelist
+            this.mFirstFree = sortedFreeList[0];
+            for(size_t rightIndex = 1; rightIndex < sortedFreeList.length; rightIndex++)
+            {
+                this.mArray[sortedFreeList[rightIndex-1]].mNextFree = sortedFreeList[rightIndex];
+            }
+            this.mArray[sortedFreeList[sortedFreeList.length-1]].mNextFree = NoneIndex;
+
+            /// mark that freelist is actual sorted
+            this.mActualFreeList = true;
         }
     }
 
     // See IPoolAllocator. Dynamic array aren't supported.
-    static if(isStaticArray!T){
-        ForeachType!T[] opIndex(size_t index){
+    static if(isStaticArray!T)
+    {
+        ForeachType!T[] opIndex(size_t index)
+        {
             return this.mArray[index].component;
         }
-        public int opApply(scope int delegate(ForeachType!T[] component) dg){
+        public int opApply(scope int delegate(ForeachType!T[] component) dg)
+        {
             this.sortFreeList;
-            size_t freeIndex = 0;
+            size_t freeIndex = this.mFirstFree;
 
-            foreach(i, ref Component element; this.mArray){
-                if(freeIndex < this.sortedFreeList.length() && this.sortedFreeList[freeIndex] == i){
-                    freeIndex++;
+            foreach(i, ref Component element; this.mArray)
+            {
+                if(freeIndex != NoneIndex && freeIndex == i)
+                {
+                    freeIndex = this.mArray[freeIndex].mNextFree;
                     continue;
                 }
                 if(i >= this.mLast)
@@ -224,17 +251,22 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             return 0;
         }
     }
-    else{
-        ref T opIndex(size_t index){
+    else
+    {
+        ref T opIndex(size_t index)
+        {
             return this.mArray[index].component;
         }
-        public int opApply(scope int delegate(ref T component) dg){
+        public int opApply(scope int delegate(ref T component) dg)
+        {
             this.sortFreeList;
-            size_t freeIndex = 0;
+            size_t freeIndex = this.mFirstFree;
 
-            foreach(i, ref Component element; this.mArray){
-                if(freeIndex < this.sortedFreeList.length() && this.sortedFreeList[freeIndex] == i){
-                    freeIndex++;
+            foreach(i, ref Component element; this.mArray)
+            {
+                if(freeIndex != NoneIndex && freeIndex == i)
+                {
+                    freeIndex = this.mArray[freeIndex].mNextFree;
                     continue;
                 }
                 if(i >= this.mLast)
@@ -252,8 +284,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     blockType mBlock;
 
     Component[] mArray;
-    Array!size_t sortedFreeList;
-    bool actualFreeList = true;
+    bool mActualFreeList = true;
 
     size_t mFirstFree = NoneIndex;  // First for allocation index in free list.
     size_t mAllocated = 0;          // Count of allocated element.
@@ -277,12 +308,14 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     }
 
 
-    private ref size_t componentIndex(size_t index){
+    private ref size_t componentIndex(size_t index)
+    {
         size_t* indexPointer = cast(size_t*) &this.mArray[index*this.mElementSize];
         return *indexPointer;
     }
     
-    private ubyte[] componentByIndex(size_t index){
+    private ubyte[] componentByIndex(size_t index)
+    {
         const size_t start = index * this.mElementSize;
         return this.mArray[start .. start + this.mElementSize];
     }
@@ -306,6 +339,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     
     void deallocate(size_t index)
     {
+        this.mActualFreeList = false;
         assert(index < this.mArray.length, "Out of bounds.");
         debug(memory){
             for(size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.componentIndex(iterator)){
@@ -342,9 +376,11 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     
     void deallocate(size_t[] deallocate)
     {
+        this.mActualFreeList = false;
         debug(memory)
         {
-            foreach(ref index; deallocate){
+            foreach(ref index; deallocate)
+            {
                 assert(index < this.mArray.length, "Out of bounds.");
                 for(size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.componentIndex(iterator))
                 {
@@ -378,12 +414,63 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
         return this.mAllocated;
     }
 
-    ubyte[] opIndex(size_t index){
+    private void sortFreeList()
+    {
+        if(!this.mActualFreeList){
+            import std.algorithm.sorting;
+
+            if(this.mFirstFree == NoneIndex) /// If freelist is empty then freelist allready sorted.
+            {   
+                this.mActualFreeList = true;
+                return;
+            }
+
+            /// Create and reserve array for sorting freearray
+            Array!size_t sortedFreeList;
+            sortedFreeList.reserve(this.mLast - this.mAllocated);
+
+            /// converting freelist to freearray
+            size_t index = this.mFirstFree;
+            while(index != NoneIndex)
+            {
+                sortedFreeList ~= index;
+                index = this.componentIndex(index);
+            }
+
+            /// sorting.
+            sort(sortedFreeList.data);
+
+            /// converting sorted freearray to freelist
+            this.mFirstFree = sortedFreeList[0];
+            for(size_t rightIndex = 1; rightIndex < sortedFreeList.length; rightIndex++)
+            {
+                this.componentIndex(sortedFreeList[rightIndex-1]) = sortedFreeList[rightIndex];
+            }
+            this.componentIndex(sortedFreeList[sortedFreeList.length-1]) = NoneIndex;
+
+            /// mark that freelist is actual sorted
+            this.mActualFreeList = true;
+        }
+    }
+
+    ubyte[] opIndex(size_t index)
+    {
         return this.componentByIndex(index);
     }
 
-    public int opApply(scope int delegate(ubyte[] component) dg){
-        foreach(size_t index; 0..this.mLast){
+    public int opApply(scope int delegate(ubyte[] component) dg)
+    {
+        this.sortFreeList;
+        size_t freeIndex = this.mFirstFree;
+
+        foreach(size_t index; 0..this.mLast)
+        {
+            if(freeIndex != NoneIndex && freeIndex == index)
+            {
+                freeIndex = this.componentIndex(freeIndex);
+                continue;
+            }
+
             ubyte[] component = this.componentByIndex(index);
             auto result = dg(component);
             if(result)
@@ -397,6 +484,8 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     blockType mBlock;
 
     ubyte[] mArray;
+    bool mActualFreeList = true;
+
     const size_t mElementSize;      // Contain max(size_t.sizeof, size of element).
     const size_t mLength;           // Calculated count of elements which can be stored.
 
@@ -432,7 +521,21 @@ unittest {
             element = poolAllocator.allocate;
             poolAllocator[element] = 4;
         }
-        foreach(ref element; elements)
+        foreach(ref element; elements[0..$/2])
+        {
+            assert(poolAllocator[element] == 4);
+            poolAllocator.deallocate(element);
+        }
+
+        size_t count;
+        foreach(ref element; poolAllocator){
+            count++;
+            assert(element == 4);
+        }
+
+        assert(count == elements.length/2);
+
+        foreach(ref element; elements[$/2..$])
         {
             assert(poolAllocator[element] == 4);
             poolAllocator.deallocate(element);
@@ -454,7 +557,22 @@ unittest {
             element = sizedPoolAllocator.allocate;
             sizedPoolAllocator[element][0..$] = templateData[0..$];
         }
-        foreach(ref element; elements)
+        foreach(ref element; elements[0..$/2])
+        {
+            assert(sizedPoolAllocator[element][0..$] == templateData[0..$]);
+            sizedPoolAllocator.deallocate(element);
+        }
+
+        size_t count;
+        foreach(element; sizedPoolAllocator)
+        {
+            count++;
+            assert(element[0..$] == templateData[0..$]);
+        }
+
+        assert(count == elements.length/2);
+
+        foreach(ref element; elements[$/2..$])
         {
             assert(sizedPoolAllocator[element][0..$] == templateData[0..$]);
             sizedPoolAllocator.deallocate(element);
