@@ -1,4 +1,4 @@
-module evoengine.utils.containers.bitarray;
+module evoengine.utils.containers.flagarray;
 import dlib.container.array;
 import dlib.core.bitio;
 
@@ -67,21 +67,9 @@ struct FlagArray
     private Array!size_t data;
 }
 
+@("FlagArray")
 unittest
 {
-    scope (success)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.error("Failure!");
-    }
-
     FlagArray array1, array2, array3;
     
     array1[1] = true;

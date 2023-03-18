@@ -96,20 +96,9 @@ class BlockAllocator
     private size_t mFreeBlock = NoneBlock;
 }
 
+@("BlockAllocator")
 unittest
 {
-    scope (success)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.error("Failure!");
-    }
     import dlib.core.memory : New, Delete;
 
     BlockAllocator blockAllocator = New!BlockAllocator;

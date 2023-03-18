@@ -1,55 +1,61 @@
 module evoengine.utils.ecs.entity;
 public import evoengine.utils.ecs.common;
-import 
-evoengine.utils.memory.componentallocator,
+import evoengine.utils.memory.componentallocator,
 evoengine.utils.memory.blockallocator,
 dlib.core.memory,
 dlib.container.array;
 
-class EntityManager{
+class EntityManager
+{
     struct EntityData
     {
 
-        bool isRegistered(size_t componentType)
+        bool isRegistered(ComponentTypeId componentType)
         {
             return mComponentFlags[componentType];
         }
-        size_t opIndex(size_t componentType) 
+
+        size_t opIndex(ComponentTypeId componentType)
         {
             debug assert(mComponentFlags[componentType]);
             return this.mEntityArray[componentType];
         }
-        void changeComponentId(size_t componentType, size_t componentId)
+
+        void changeComponentId(ComponentTypeId componentType, ComponentId componentId)
         {
             debug assert(mComponentFlags[componentType]);
             this.mEntityArray[componentType] = componentId;
         }
-        void registrateComponent(size_t componentType, size_t componentId)
+
+        void registrateComponent(ComponentTypeId componentType, ComponentId componentId)
         {
             debug assert(!mComponentFlags[componentType]);
 
             this.mComponentFlags[componentType] = true;
 
-            while(this.mEntityArray.length() <= componentType){
+            while (this.mEntityArray.length() <= componentType)
+            {
                 this.mEntityArray.insertBack(NoneComponent);
             }
 
             this.mEntityArray[componentType] = componentId;
         }
-        void unregistrateComponent(size_t componentType, size_t componentId)
+
+        void unregistrateComponent(ComponentTypeId componentType, ComponentId componentId)
         {
             debug assert(mComponentFlags[componentType]);
 
             this.mComponentFlags[componentType] = false;
             this.mEntityArray[componentType] = NoneComponentType;
 
-            while(this.mEntityArray[this.mEntityArray.length - 1] == NoneComponent){
+            while (this.mEntityArray[this.mEntityArray.length - 1] == NoneComponent)
+            {
                 this.mEntityArray.removeBack(1);
             }
         }
 
         ComponentFlags mComponentFlags;
-        Array!ComponentId mEntityArray;
+        Array!ComponentTypeId mEntityArray;
     }
 
     this(BlockAllocator allocator)
@@ -67,23 +73,25 @@ class EntityManager{
         this.mData.deallocate(id);
     }
 
-    bool isRegistered(size_t entity, size_t componentType)
+    bool isRegistered(EntityId entity, ComponentTypeId componentType)
     {
         return this.mData[entity].isRegistered(componentType);
     }
-    void registrateComponent(size_t entity, size_t componentType, size_t componentId)
+
+    void registrateComponent(EntityId entity, ComponentTypeId componentType, ComponentId componentId)
     {
         this.mData[entity].registrateComponent(componentType, componentId);
     }
-    void changeComponentId(size_t entity, size_t componentType, size_t componentId)
+
+    void changeComponentId(EntityId entity, ComponentTypeId componentType, ComponentId componentId)
     {
         this.mData[entity].changeComponentId(componentType, componentId);
     }
-    void unregistrateComponent(size_t entity, size_t componentType)
+
+    void unregistrateComponent(EntityId entity, ComponentTypeId componentType)
     {
         this.mData[entity].unregistrateComponent(componentType, componentType);
     }
-
 
     ~this()
     {
@@ -93,36 +101,28 @@ class EntityManager{
     ComponentAllocator!EntityData mData;
 }
 
-unittest {
-    scope(success)
-    {
-        import evoengine.utils.logging;
-        globalLogger.info("Success");
-    }
-    scope(failure)
-    {
-        import evoengine.utils.logging;
-        globalLogger.error("Failure!");
-    }
-
+@("ECS/EntityManager")
+unittest
+{
     BlockAllocator blockAllocator = New!BlockAllocator;
     EntityManager entityManager = New!(EntityManager)(blockAllocator);
-    scope(exit)
+    scope (exit)
     {
         Delete(blockAllocator);
         Delete(entityManager);
     }
     import std.datetime, std.stdio;
+
     auto start = Clock.currTime;
-    foreach(j; 0..10)
+    foreach (j; 0 .. 10)
     {
         size_t[] entities = new size_t[10_000];
 
-        foreach(ref entity; entities)
+        foreach (ref entity; entities)
         {
             entity = entityManager.create;
         }
-        foreach(ref entity; entities)
+        foreach (ref entity; entities)
         {
             entityManager.destroy(entity);
         }

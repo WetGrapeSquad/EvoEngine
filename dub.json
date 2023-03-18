@@ -8,31 +8,36 @@
 	"authors": [
 		"Gedert Korney Yakovlevich"
 	],
-	"importPaths": [
-		"."
-	],
-	
 	"configurations": [
-        {
-            "name": "library",
-            "targetType": "library",
-            "sourcePaths": ["evoengine"]
-        },
-        {
-            "name": "import",
-            "targetType": "sourceLibrary",
-            "sourceFiles-posix": ["libevoengine.a"],
-            "sourceFiles-windows": ["evoengine.lib"]
-        }
-    ],
-
+		{
+			"name": "library",
+			"sourcePaths": [
+				"evoengine"
+			],
+			"targetType": "library"
+		},
+		{
+			"name": "import",
+			"sourceFiles-posix": [
+				"libevoengine.a"
+			],
+			"sourceFiles-windows": [
+				"evoengine.lib"
+			],
+			"targetType": "sourceLibrary"
+		}
+	],
 	"copyright": "Copyright © 2023, Gedert Korney Yakovlevich. Made by WetGrape with ♥",
 	"dependencies": {
 		"dlib": "~>1.1.0",
 		"gogga": "~>2.1.16",
-		"grimoire": "~>0.8.0"
+		"grimoire": "~>0.8.0",
+		"silly": "~>1.1.1"
 	},
 	"description": "A simple engine on D",
+	"importPaths": [
+		"."
+	],
 	"license": "MIT",
 	"name": "evoengine",
 	"targetType": "staticLibrary"

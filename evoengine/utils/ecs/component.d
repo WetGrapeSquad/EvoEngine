@@ -17,7 +17,7 @@ dlib.core.memory,
 dlib.container.array,
 dlib.container.dict;
 
-/// TODO: Rewrite on PoolAllocator.
+/// TODO: Rewrite on PoolAllocator and optimize algorithm.
 class ComponentManager
 {
     this(BlockAllocator blockAllocator)
@@ -232,22 +232,12 @@ class ComponentManager
     BlockAllocator mBlockAllocator;
 }
 
+@("ECS/Component")
 unittest
 {
-    import evoengine.utils.logging;
-
     struct Test
     {
         int i = 0;
-    }
-
-    scope (success)
-    {
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        globalLogger.error("Failure!");
     }
 
     BlockAllocator blockAllocator = New!BlockAllocator;
@@ -272,7 +262,6 @@ unittest
         }
     }
 }
-
 /**
 * Copyright: WetGrape 2023.
 * License: MIT.

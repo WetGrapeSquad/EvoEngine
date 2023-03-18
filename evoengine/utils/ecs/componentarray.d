@@ -126,7 +126,9 @@ class SizedComponentArray : IComponentArray
         {
             int result = dg(component.entity);
             if (result)
+            {
                 return result;
+            }
         }
         return 0;
     }
@@ -137,7 +139,9 @@ class SizedComponentArray : IComponentArray
         {
             int result = dg(component.data);
             if (result)
+            {
                 return result;
+            }
         }
         return 0;
     }
@@ -151,22 +155,12 @@ class SizedComponentArray : IComponentArray
     ComponentAllocator!ComponentItemType mComponents;
 }
 
+@("ECS/ComponentArray")
 unittest
 {
-    import evoengine.utils.logging;
-
     struct TestStruct
     {
         int i = 0;
-    }
-
-    scope (success)
-    {
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        globalLogger.error("Failure!");
     }
 
     BlockAllocator blockAllocator = New!BlockAllocator;

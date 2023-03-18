@@ -160,12 +160,11 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             foreach (ref index; deallocate)
             {
                 assert(index < this.mArray.length, "Out of bounds.");
-                for (size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this
-                    .mArray[iterator].mNextFree)
+                for (size_t i = this.mFirstFree; i != NoneIndex; i = this.mArray[i].mNextFree)
                 {
                     import std.conv : to;
 
-                    assert(iterator != index, "Double free index [" ~ index.to!string ~ "].");
+                    assert(i != index, "Double free index [" ~ index.to!string ~ "].");
                 }
             }
         }
@@ -283,11 +282,15 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
                     continue;
                 }
                 if (i >= this.mLast)
+                {
                     break;
+                }
 
                 int result = dg(element.component);
                 if (result)
+                {
                     return result;
+                }
             }
             return 0;
         }
@@ -343,6 +346,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     {
         assert(this.avaliable > 0, "No avaliable elements to allocate!");
         size_t index;
+
         if (this.mFirstFree != NoneIndex)
         {
             index = this.mFirstFree;
@@ -353,6 +357,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             index = this.mLast;
             this.mLast++;
         }
+
         this.mAllocated++;
         return index;
     }
@@ -363,12 +368,11 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
         assert(index < this.mArray.length, "Out of bounds.");
         debug (memory)
         {
-            for (size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.componentIndex(
-                    iterator))
+            for (size_t i = this.mFirstFree; i != NoneIndex; i = this.componentIndex(i))
             {
                 import std.conv : to;
 
-                assert(iterator != index, "Double free index [" ~ index.to!string ~ "].");
+                assert(i != index, "Double free index [" ~ index.to!string ~ "].");
             }
         }
         this.componentIndex(index) = this.mFirstFree;
@@ -407,12 +411,11 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             foreach (ref index; deallocate)
             {
                 assert(index < this.mArray.length, "Out of bounds.");
-                for (size_t iterator = this.mFirstFree; iterator != NoneIndex; iterator = this.componentIndex(
-                        iterator))
+                for (size_t i = this.mFirstFree; i != NoneIndex; i = this.componentIndex(i))
                 {
                     import std.conv : to;
 
-                    assert(iterator != index, "Double free index [" ~ index.to!string ~ "].");
+                    assert(i != index, "Double free index [" ~ index.to!string ~ "].");
                 }
             }
         }
@@ -500,8 +503,11 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 
             ubyte[] component = this.componentByIndex(index);
             auto result = dg(component);
+
             if (result)
+            {
                 return result;
+            }
         }
         return 0;
     }
@@ -525,27 +531,15 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     size_t mLast = 0; // Index of last element is don't touched block of memory.
 }
 
+@("PoolAllocator")
 unittest
 {
     import dlib.core.memory;
 
-    scope (success)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.error("Failure!");
-    }
-
     BlockAllocator allocator = New!BlockAllocator;
     IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
-    IPoolAllocator!(ubyte[]) sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator, cast(
-            size_t) 16);
+    IPoolAllocator!(ubyte[]) sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator,
+        cast(size_t) 16);
 
     scope (exit)
     {

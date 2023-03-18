@@ -37,7 +37,6 @@ struct MallocAllocator
 class DebugWrapper(allocator)
 {
     import std.datetime : Clock, SysTime;
-    import std.logger.core;
 
     struct AllocationData
     {
@@ -103,21 +102,9 @@ class DebugWrapper(allocator)
     static __gshared AllocationData[size_t] gAllocations;
 }
 
+@("MallocAllocator")
 unittest
 {
-    scope (success)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.info("Success");
-    }
-    scope (failure)
-    {
-        import evoengine.utils.logging;
-
-        globalLogger.error("Failure!");
-    }
-
     void[][] test;
     test.length = 100_000;
 
