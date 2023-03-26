@@ -15,6 +15,486 @@
 	},
 	{
 		"kind": "module",
+		"file": "evoengine/utils/containers/binary.d",
+		"members": [
+			{
+				"line": 9,
+				"kind": "enum",
+				"char": 1,
+				"members": [
+					{
+						"line": 11,
+						"kind": "enum member",
+						"char": 5,
+						"name": "FILO",
+						"protection": "public",
+						"value": "0",
+						"comment": "`F`irst `I`n `L`ast `O`ut\n"
+					},
+					{
+						"line": 12,
+						"kind": "enum member",
+						"char": 5,
+						"name": "FIFO",
+						"protection": "public",
+						"value": "1",
+						"comment": "`F`irst `I`n `F`irst `O`ut\n"
+					}
+				],
+				"name": "Order",
+				"protection": "public",
+				"baseDeco": "i",
+				"comment": "\n Write/Read ordering.\n"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "value",
+						"deco": "E9evoengine5utils10containers6binary5Order",
+						"defaultValue": "Order.FILO",
+						"name": "order"
+					}
+				],
+				"line": 21,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"line": 21,
+						"kind": "struct",
+						"char": 1,
+						"members": [
+							{
+								"constraint": "!isArray!T && !isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 24,
+								"kind": "template",
+								"char": 18,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "T",
+												"storageClass": [
+													"const",
+													"ref"
+												],
+												"name": "data"
+											}
+										],
+										"line": 24,
+										"kind": "function",
+										"char": 18,
+										"name": "rawWrite",
+										"type": "void(const ref T data)",
+										"endchar": 5,
+										"endline": 29
+									}
+								],
+								"name": "rawWrite",
+								"comment": "Help raw write method. Only write one variable to inner data buffer.\n"
+							},
+							{
+								"constraint": "!isArray!T && !isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 31,
+								"kind": "template",
+								"char": 18,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "T[]",
+												"storageClass": [
+													"const",
+													"ref"
+												],
+												"name": "data"
+											}
+										],
+										"line": 31,
+										"kind": "function",
+										"char": 18,
+										"name": "rawWrite",
+										"type": "void(const ref T[] data)",
+										"endchar": 5,
+										"endline": 36
+									}
+								],
+								"name": "rawWrite",
+								"comment": "Help raw write method. Only write one-dimensional array to inner data buffer.(ONE-DIMENSIONAL)\n"
+							},
+							{
+								"constraint": "!isArray!T && !isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 38,
+								"kind": "template",
+								"char": 15,
+								"members": [
+									{
+										"line": 38,
+										"kind": "function",
+										"char": 15,
+										"name": "rawRead",
+										"type": "T()",
+										"endchar": 5,
+										"endline": 57
+									}
+								],
+								"name": "rawRead",
+								"comment": "Help raw read method. Only read one variable from inner data buffer.\n"
+							},
+							{
+								"constraint": "isArray!T && !isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 59,
+								"kind": "template",
+								"char": 27,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "size_t",
+												"name": "length"
+											}
+										],
+										"line": 59,
+										"kind": "function",
+										"char": 27,
+										"name": "rawRead",
+										"type": "toArrayType!T(size_t length)",
+										"endchar": 5,
+										"endline": 79
+									}
+								],
+								"name": "rawRead",
+								"comment": "Help raw read method. Only read one-dimensional array from inner data buffer.(ONE-DIMENSIONAL)\n"
+							},
+							{
+								"constraint": "!isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 81,
+								"kind": "template",
+								"char": 18,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "T",
+												"storageClass": [
+													"const",
+													"ref"
+												],
+												"name": "data"
+											}
+										],
+										"line": 81,
+										"kind": "function",
+										"char": 18,
+										"name": "innerWrite",
+										"type": "void(const ref T data)",
+										"endchar": 5,
+										"endline": 123
+									}
+								],
+								"name": "innerWrite",
+								"comment": "Inner wrap method on top rawWrite. Allow use multidimensional arrays.\n"
+							},
+							{
+								"constraint": "!isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 126,
+								"kind": "template",
+								"char": 27,
+								"members": [
+									{
+										"line": 126,
+										"kind": "function",
+										"char": 27,
+										"name": "innerRead",
+										"type": "toArrayType!T()",
+										"endchar": 5,
+										"endline": 164
+									}
+								],
+								"name": "innerRead",
+								"comment": "Inner wrap method on top rawRead. Allow use multidimensional arrays.\n"
+							},
+							{
+								"constraint": "!isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 167,
+								"kind": "template",
+								"char": 17,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "T",
+												"name": "data"
+											}
+										],
+										"line": 167,
+										"kind": "function",
+										"char": 17,
+										"name": "write",
+										"type": "void(T data)",
+										"endchar": 5,
+										"endline": 187
+									}
+								],
+								"name": "write",
+								"comment": "Wrap on top innerWrite. Enable debuging/checking in `BinaryBuffer`.\n"
+							},
+							{
+								"constraint": "!isCompositeType!T",
+								"parameters": [
+									{
+										"kind": "type",
+										"name": "T"
+									}
+								],
+								"line": 190,
+								"kind": "template",
+								"char": 26,
+								"members": [
+									{
+										"line": 190,
+										"kind": "function",
+										"char": 26,
+										"name": "read",
+										"type": "toArrayType!T()",
+										"endchar": 5,
+										"endline": 199
+									}
+								],
+								"name": "read",
+								"comment": "Wrap on top innerRead. Enable debuging/checking in `BinaryBuffer`.\n"
+							},
+							{
+								"line": 200,
+								"kind": "function",
+								"char": 13,
+								"name": "data",
+								"type": "ubyte[]()",
+								"endchar": 5,
+								"endline": 203
+							},
+							{
+								"kind": "variable",
+								"type": "Array!ubyte",
+								"char": 17,
+								"line": 205,
+								"name": "mBuffer"
+							}
+						],
+						"name": "BinaryBuffer",
+						"protection": "public"
+					}
+				],
+				"name": "BinaryBuffer",
+				"protection": "public",
+				"comment": "\n `BinaryBuffer` implement binary serialization structure. This structure\n  have only one template argument - `order`. If `order = Order.FIFO`, then the\n  order of reading should be the reverse of writing(`F`irst `I`n `L`ast `O`ut).\n  Else order of reading should be the order of writing(`F`irst `I`n `F`irst `O`ut).\n"
+			}
+		],
+		"name": "evoengine.utils.containers.binary"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/containers/common.d",
+		"members": [
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 5,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"storageClass": [
+							"enum"
+						],
+						"line": 7,
+						"kind": "variable",
+						"char": 10,
+						"name": "isClass",
+						"init": "is(T == class)"
+					}
+				],
+				"name": "isClass",
+				"protection": "public"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 9,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"storageClass": [
+							"enum"
+						],
+						"line": 11,
+						"kind": "variable",
+						"char": 10,
+						"name": "isInterface",
+						"init": "is(T == interface)"
+					}
+				],
+				"name": "isInterface",
+				"protection": "public"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 13,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"storageClass": [
+							"enum"
+						],
+						"line": 15,
+						"kind": "variable",
+						"char": 10,
+						"name": "isStruct",
+						"init": "is(T == struct)"
+					}
+				],
+				"name": "isStruct",
+				"protection": "public"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 17,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"storageClass": [
+							"enum"
+						],
+						"line": 19,
+						"kind": "variable",
+						"char": 10,
+						"name": "isCompositeType",
+						"init": "isClass!T || isInterface!T || isStruct!T"
+					}
+				],
+				"name": "isCompositeType",
+				"protection": "public"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 21,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"kind": "alias",
+						"type": "Array!(toArrayType!(ForeachType!T))",
+						"char": 9,
+						"line": 25,
+						"name": "toArrayType"
+					}
+				],
+				"name": "toArrayType",
+				"protection": "public"
+			},
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "T"
+					}
+				],
+				"line": 33,
+				"kind": "template",
+				"char": 15,
+				"members": [
+					{
+						"parameters": [
+							{
+								"type": "T",
+								"name": "array"
+							}
+						],
+						"line": 33,
+						"kind": "function",
+						"char": 15,
+						"name": "toDlibArray",
+						"type": "toArrayType!T(T array)",
+						"endchar": 1,
+						"endline": 53
+					}
+				],
+				"name": "toDlibArray",
+				"protection": "public"
+			}
+		],
+		"name": "evoengine.utils.containers.common"
+	},
+	{
+		"kind": "module",
 		"file": "evoengine/utils/containers/flagarray.d",
 		"members": [
 			{
