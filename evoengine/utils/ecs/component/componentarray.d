@@ -1,4 +1,4 @@
-module evoengine.utils.ecs.componentarray;
+module evoengine.utils.ecs.component.componentarray;
 public import evoengine.utils.ecs.common;
 import evoengine.utils.memory.componentallocator,
 evoengine.utils.memory.blockallocator,
