@@ -15,7 +15,7 @@
 	},
 	{
 		"kind": "module",
-		"file": "evoengine/utils/containers/bitarray.d",
+		"file": "evoengine/utils/containers/flagarray.d",
 		"members": [
 			{
 				"line": 5,
@@ -41,7 +41,7 @@
 						"deco": "FNdbmZb",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 26
+						"endline": 28
 					},
 					{
 						"parameters": [
@@ -50,7 +50,7 @@
 								"name": "index"
 							}
 						],
-						"line": 27,
+						"line": 30,
 						"kind": "function",
 						"originalType": "@property bool(size_t index)",
 						"char": 10,
@@ -58,57 +58,57 @@
 						"deco": "FNdmZb",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 36
+						"endline": 39
 					},
 					{
 						"parameters": [
 							{
-								"deco": "S9evoengine5utils10containers8bitarray9FlagArray",
+								"deco": "S9evoengine5utils10containers9flagarray9FlagArray",
 								"name": "array"
 							}
 						],
-						"line": 38,
+						"line": 41,
 						"kind": "function",
 						"char": 10,
 						"name": "containAll",
-						"deco": "FS9evoengine5utils10containers8bitarray9FlagArrayZb",
+						"deco": "FS9evoengine5utils10containers9flagarray9FlagArrayZb",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 47
+						"endline": 51
 					},
 					{
 						"parameters": [
 							{
-								"deco": "S9evoengine5utils10containers8bitarray9FlagArray",
+								"deco": "S9evoengine5utils10containers9flagarray9FlagArray",
 								"name": "array"
 							}
 						],
-						"line": 49,
+						"line": 53,
 						"kind": "function",
 						"char": 10,
 						"name": "containAny",
-						"deco": "FS9evoengine5utils10containers8bitarray9FlagArrayZb",
+						"deco": "FS9evoengine5utils10containers9flagarray9FlagArrayZb",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 59
+						"endline": 65
 					}
 				],
 				"name": "FlagArray",
 				"protection": "public"
 			}
 		],
-		"name": "evoengine.utils.containers.bitarray"
+		"name": "evoengine.utils.containers.flagarray"
 	},
 	{
 		"kind": "module",
-		"file": "evoengine/utils/ecs/common.d",
+		"file": "evoengine/utils/ecs/common/package.d",
 		"members": [
 			{
 				"line": 4,
 				"kind": "alias",
 				"char": 1,
 				"name": "ComponentFlags",
-				"deco": "S9evoengine5utils10containers8bitarray9FlagArray",
+				"deco": "S9evoengine5utils10containers9flagarray9FlagArray",
 				"protection": "public"
 			},
 			{
@@ -188,7 +188,331 @@
 	},
 	{
 		"kind": "module",
-		"file": "evoengine/utils/ecs/component.d",
+		"file": "evoengine/utils/ecs/component/component.d",
+		"members": [
+			{
+				"line": 22,
+				"kind": "class",
+				"char": 1,
+				"members": [
+					{
+						"parameters": [
+							{
+								"deco": "C9evoengine5utils6memory14blockallocator14BlockAllocator",
+								"name": "blockAllocator"
+							}
+						],
+						"line": 24,
+						"kind": "constructor",
+						"originalType": "(BlockAllocator blockAllocator)",
+						"char": 5,
+						"name": "this",
+						"deco": "FC9evoengine5utils6memory14blockallocator14BlockAllocatorZCQCfQBy3ecs9componentQk16ComponentManager",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 27
+					},
+					{
+						"parameters": [
+							{
+								"kind": "type",
+								"name": "T"
+							}
+						],
+						"line": 29,
+						"kind": "template",
+						"char": 12,
+						"members": [
+							{
+								"line": 29,
+								"kind": "function",
+								"char": 12,
+								"name": "register",
+								"type": "size_t()",
+								"endchar": 5,
+								"endline": 33
+							}
+						],
+						"name": "register",
+						"protection": "public"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "size"
+							},
+							{
+								"deco": "Aya",
+								"name": "name"
+							}
+						],
+						"line": 35,
+						"kind": "function",
+						"originalType": "size_t(size_t size, string name)",
+						"char": 12,
+						"name": "register",
+						"deco": "FmAyaZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 39
+					},
+					{
+						"parameters": [
+							{
+								"kind": "type",
+								"name": "T"
+							}
+						],
+						"line": 41,
+						"kind": "template",
+						"char": 10,
+						"members": [
+							{
+								"line": 41,
+								"kind": "function",
+								"char": 10,
+								"name": "unregister",
+								"type": "void()",
+								"endchar": 5,
+								"endline": 46
+							}
+						],
+						"name": "unregister",
+						"protection": "public"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "Aya",
+								"name": "name"
+							}
+						],
+						"line": 48,
+						"kind": "function",
+						"char": 10,
+						"name": "unregister",
+						"deco": "FAyaZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 53
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "componentType"
+							}
+						],
+						"line": 55,
+						"kind": "function",
+						"originalType": "void(size_t componentType)",
+						"char": 10,
+						"name": "unregister",
+						"deco": "FmZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 59
+					},
+					{
+						"parameters": [
+							{
+								"kind": "type",
+								"name": "T"
+							}
+						],
+						"line": 61,
+						"kind": "template",
+						"char": 12,
+						"members": [
+							{
+								"parameters": [
+									{
+										"type": "size_t",
+										"name": "entity"
+									}
+								],
+								"line": 61,
+								"kind": "function",
+								"char": 12,
+								"name": "create",
+								"type": "size_t(size_t entity)",
+								"endchar": 5,
+								"endline": 64
+							}
+						],
+						"name": "create",
+						"protection": "public"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "Aya",
+								"name": "name"
+							},
+							{
+								"deco": "m",
+								"name": "entity"
+							}
+						],
+						"line": 66,
+						"kind": "function",
+						"originalType": "size_t(string name, size_t entity)",
+						"char": 12,
+						"name": "create",
+						"deco": "FAyamZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 69
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "componentType"
+							},
+							{
+								"deco": "m",
+								"name": "entity"
+							}
+						],
+						"line": 71,
+						"kind": "function",
+						"originalType": "size_t(size_t componentType, size_t entity)",
+						"char": 12,
+						"name": "create",
+						"deco": "FmmZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 74
+					},
+					{
+						"parameters": [
+							{
+								"kind": "type",
+								"name": "T"
+							}
+						],
+						"line": 76,
+						"kind": "template",
+						"char": 10,
+						"members": [
+							{
+								"parameters": [
+									{
+										"type": "size_t",
+										"name": "componentId"
+									}
+								],
+								"line": 76,
+								"kind": "function",
+								"char": 10,
+								"name": "destroy",
+								"type": "void(size_t componentId)",
+								"endchar": 5,
+								"endline": 79
+							}
+						],
+						"name": "destroy",
+						"protection": "public"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "Aya",
+								"name": "name"
+							},
+							{
+								"deco": "m",
+								"name": "componentId"
+							}
+						],
+						"line": 81,
+						"kind": "function",
+						"originalType": "void(string name, size_t componentId)",
+						"char": 10,
+						"name": "destroy",
+						"deco": "FAyamZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 84
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "componentType"
+							},
+							{
+								"deco": "m",
+								"name": "componentId"
+							}
+						],
+						"line": 86,
+						"kind": "function",
+						"originalType": "void(size_t componentType, size_t componentId)",
+						"char": 10,
+						"name": "destroy",
+						"deco": "FmmZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 89
+					},
+					{
+						"storageClass": [
+							"scope"
+						],
+						"line": 91,
+						"kind": "destructor",
+						"char": 5,
+						"name": "~this",
+						"deco": "FNlZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 97
+					},
+					{
+						"line": 99,
+						"kind": "variable",
+						"originalType": "ClassRegistrator!IComponentArray",
+						"char": 38,
+						"name": "mComponentArrays",
+						"deco": "S9evoengine5utils6memory16classregistrator__T16ClassRegistratorTCQCmQCf3ecs9component14componentarray15IComponentArrayZQCw",
+						"protection": "public",
+						"offset": 16
+					},
+					{
+						"line": 101,
+						"kind": "variable",
+						"originalType": "size_t",
+						"char": 12,
+						"name": "mLastId",
+						"deco": "m",
+						"protection": "public",
+						"offset": 1368
+					},
+					{
+						"line": 102,
+						"kind": "variable",
+						"originalType": "BlockAllocator",
+						"char": 20,
+						"name": "mBlockAllocator",
+						"deco": "C9evoengine5utils6memory14blockallocator14BlockAllocator",
+						"protection": "public",
+						"offset": 1376
+					}
+				],
+				"name": "ComponentManager",
+				"protection": "public",
+				"comment": "TODO: Rewrite on PoolAllocator and optimize algorithm.\n"
+			}
+		],
+		"comment": " Implementation Component classes for ECS.\n\n Description:\n This module contain classes for allocate and deallocate components for\n enttities in ECS. ComponentArray isn't thread-safty and needed in thread synchronizations.\n ECS is built so that it works as a separate thread - synchronizations using in communicating\n with him and communication with the systems inside.\n\n",
+		"name": "evoengine.utils.ecs.component.component"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/ecs/component/componentarray.d",
 		"members": [
 			{
 				"kind": "import",
@@ -203,12 +527,12 @@
 						"name": "T"
 					}
 				],
-				"line": 12,
+				"line": 10,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 12,
+						"line": 10,
 						"kind": "struct",
 						"char": 1,
 						"members": [
@@ -216,14 +540,14 @@
 								"kind": "variable",
 								"type": "size_t",
 								"char": 12,
-								"line": 14,
+								"line": 12,
 								"name": "entity"
 							},
 							{
 								"kind": "variable",
 								"type": "T",
 								"char": 7,
-								"line": 15,
+								"line": 13,
 								"name": "data"
 							}
 						],
@@ -235,18 +559,63 @@
 				"protection": "public"
 			},
 			{
+				"line": 16,
+				"kind": "interface",
+				"char": 1,
+				"members": [
+					{
+						"storageClass": [
+							"abstract"
+						],
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "entity"
+							}
+						],
+						"line": 18,
+						"kind": "function",
+						"originalType": "size_t(size_t entity)",
+						"char": 12,
+						"name": "create",
+						"deco": "FmZm",
+						"protection": "public"
+					},
+					{
+						"storageClass": [
+							"abstract"
+						],
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "componentId"
+							}
+						],
+						"line": 19,
+						"kind": "function",
+						"originalType": "void(size_t componentId)",
+						"char": 10,
+						"name": "destroy",
+						"deco": "FmZv",
+						"protection": "public"
+					}
+				],
+				"name": "IComponentArray",
+				"protection": "public"
+			},
+			{
 				"parameters": [
 					{
 						"kind": "type",
 						"name": "T"
 					}
 				],
-				"line": 18,
+				"line": 22,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 18,
+						"line": 22,
 						"kind": "class",
 						"char": 1,
 						"members": [
@@ -254,7 +623,7 @@
 								"kind": "alias",
 								"type": "ComponentItem!T",
 								"char": 5,
-								"line": 20,
+								"line": 24,
 								"name": "ComponentItemType"
 							},
 							{
@@ -264,13 +633,13 @@
 										"name": "allocator"
 									}
 								],
-								"line": 22,
+								"line": 26,
 								"kind": "constructor",
 								"char": 5,
 								"name": "this",
 								"type": "(BlockAllocator allocator)",
 								"endchar": 5,
-								"endline": 25
+								"endline": 29
 							},
 							{
 								"parameters": [
@@ -279,13 +648,13 @@
 										"name": "entity"
 									}
 								],
-								"line": 27,
+								"line": 31,
 								"kind": "function",
 								"char": 12,
 								"name": "create",
 								"type": "size_t(size_t entity)",
 								"endchar": 5,
-								"endline": 32
+								"endline": 36
 							},
 							{
 								"parameters": [
@@ -294,13 +663,13 @@
 										"name": "componentId"
 									}
 								],
-								"line": 33,
+								"line": 38,
 								"kind": "function",
 								"char": 10,
 								"name": "destroy",
 								"type": "void(size_t componentId)",
 								"endchar": 5,
-								"endline": 37
+								"endline": 42
 							},
 							{
 								"parameters": [
@@ -309,13 +678,13 @@
 										"name": "index"
 									}
 								],
-								"line": 39,
+								"line": 44,
 								"kind": "function",
 								"char": 11,
 								"name": "opIndex",
 								"type": "ref T(size_t index)",
 								"endchar": 5,
-								"endline": 42
+								"endline": 47
 							},
 							{
 								"parameters": [
@@ -327,13 +696,13 @@
 										"name": "dg"
 									}
 								],
-								"line": 44,
+								"line": 49,
 								"kind": "function",
 								"char": 9,
 								"name": "opApply",
 								"type": "int(scope int delegate(ref ComponentItemType) dg)",
 								"endchar": 5,
-								"endline": 52
+								"endline": 58
 							},
 							{
 								"parameters": [
@@ -345,13 +714,13 @@
 										"name": "dg"
 									}
 								],
-								"line": 53,
+								"line": 60,
 								"kind": "function",
 								"char": 9,
 								"name": "opApply",
 								"type": "int(scope int delegate(ref size_t) dg)",
 								"endchar": 5,
-								"endline": 62
+								"endline": 69
 							},
 							{
 								"parameters": [
@@ -363,34 +732,34 @@
 										"name": "dg"
 									}
 								],
-								"line": 63,
+								"line": 71,
 								"kind": "function",
 								"char": 9,
 								"name": "opApply",
 								"type": "int(scope int delegate(ref T) dg)",
 								"endchar": 5,
-								"endline": 72
+								"endline": 80
 							},
 							{
-								"line": 74,
+								"line": 82,
 								"kind": "destructor",
 								"char": 5,
 								"name": "~this",
 								"endchar": 5,
-								"endline": 77
+								"endline": 85
 							},
 							{
 								"kind": "variable",
 								"type": "ComponentTypeId",
 								"char": 21,
-								"line": 79,
+								"line": 87,
 								"name": "componentType"
 							},
 							{
 								"kind": "variable",
 								"type": "ComponentAllocator!ComponentItemType",
 								"char": 42,
-								"line": 80,
+								"line": 88,
 								"name": "mComponents"
 							}
 						],
@@ -400,9 +769,199 @@
 				],
 				"name": "ComponentArray",
 				"protection": "public"
+			},
+			{
+				"line": 91,
+				"kind": "class",
+				"char": 1,
+				"members": [
+					{
+						"line": 93,
+						"kind": "alias",
+						"char": 5,
+						"name": "ComponentItemType",
+						"deco": "S9evoengine5utils3ecs9component14componentarray__T13ComponentItemTAhZQt",
+						"protection": "public"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "C9evoengine5utils6memory14blockallocator14BlockAllocator",
+								"name": "allocator"
+							},
+							{
+								"deco": "m",
+								"name": "size"
+							}
+						],
+						"line": 95,
+						"kind": "constructor",
+						"originalType": "(BlockAllocator allocator, size_t size)",
+						"char": 5,
+						"name": "this",
+						"deco": "FC9evoengine5utils6memory14blockallocator14BlockAllocatormZCQCgQBz3ecs9component14componentarray19SizedComponentArray",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 98
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "entity"
+							}
+						],
+						"overrides": [
+							"evoengine.utils.ecs.component.componentarray.IComponentArray.create"
+						],
+						"line": 100,
+						"kind": "function",
+						"originalType": "size_t(size_t entity)",
+						"char": 12,
+						"name": "create",
+						"deco": "FmZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 105
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "componentId"
+							}
+						],
+						"overrides": [
+							"evoengine.utils.ecs.component.componentarray.IComponentArray.destroy"
+						],
+						"line": 107,
+						"kind": "function",
+						"originalType": "void(size_t componentId)",
+						"char": 10,
+						"name": "destroy",
+						"deco": "FmZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 111
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "index"
+							}
+						],
+						"line": 113,
+						"kind": "function",
+						"originalType": "ubyte[](size_t index)",
+						"char": 13,
+						"name": "opIndex",
+						"deco": "FmZAh",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 116
+					},
+					{
+						"parameters": [
+							{
+								"deco": "DFKS9evoengine5utils3ecs9component14componentarray__T13ComponentItemTAhZQtZi",
+								"storageClass": [
+									"scope"
+								],
+								"name": "dg"
+							}
+						],
+						"line": 118,
+						"kind": "function",
+						"originalType": "int(scope int delegate(ref ComponentItemType) dg)",
+						"char": 9,
+						"name": "opApply",
+						"deco": "FMDFKS9evoengine5utils3ecs9component14componentarray__T13ComponentItemTAhZQtZiZi",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 121
+					},
+					{
+						"parameters": [
+							{
+								"deco": "DFKmZi",
+								"storageClass": [
+									"scope"
+								],
+								"name": "dg"
+							}
+						],
+						"line": 123,
+						"kind": "function",
+						"originalType": "int(scope int delegate(ref size_t) dg)",
+						"char": 9,
+						"name": "opApply",
+						"deco": "FMDFKmZiZi",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 134
+					},
+					{
+						"parameters": [
+							{
+								"deco": "DFAhZi",
+								"storageClass": [
+									"scope"
+								],
+								"name": "dg"
+							}
+						],
+						"line": 136,
+						"kind": "function",
+						"char": 9,
+						"name": "opApply",
+						"deco": "FMDFAhZiZi",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 147
+					},
+					{
+						"storageClass": [
+							"scope"
+						],
+						"line": 149,
+						"kind": "destructor",
+						"char": 5,
+						"name": "~this",
+						"deco": "FNlZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 152
+					},
+					{
+						"line": 154,
+						"kind": "variable",
+						"originalType": "ComponentTypeId",
+						"char": 21,
+						"name": "componentType",
+						"deco": "m",
+						"protection": "public",
+						"offset": 24
+					},
+					{
+						"line": 155,
+						"kind": "variable",
+						"originalType": "ComponentAllocator!ComponentItemType",
+						"char": 42,
+						"name": "mComponents",
+						"deco": "C9evoengine5utils6memory18componentallocator23typedcomponentallocator__T18ComponentAllocatorTSQDpQDi3ecs9component14componentarray__T13ComponentItemTAhZQtZQDf",
+						"protection": "public",
+						"offset": 32
+					}
+				],
+				"name": "SizedComponentArray",
+				"interfaces": [
+					"evoengine.utils.ecs.component.componentarray.IComponentArray"
+				],
+				"protection": "public"
 			}
 		],
-		"name": "evoengine.utils.ecs.component"
+		"name": "evoengine.utils.ecs.component.componentarray"
 	},
 	{
 		"kind": "module",
@@ -415,7 +974,7 @@
 				"name": "evoengine.utils.ecs.common"
 			},
 			{
-				"line": 9,
+				"line": 8,
 				"kind": "class",
 				"char": 1,
 				"members": [
@@ -433,7 +992,7 @@
 								],
 								"line": 13,
 								"kind": "function",
-								"originalType": "bool(size_t componentType)",
+								"originalType": "bool(ComponentTypeId componentType)",
 								"char": 14,
 								"name": "isRegistered",
 								"deco": "FmZb",
@@ -448,15 +1007,15 @@
 										"name": "componentType"
 									}
 								],
-								"line": 17,
+								"line": 18,
 								"kind": "function",
-								"originalType": "size_t(size_t componentType)",
+								"originalType": "size_t(ComponentTypeId componentType)",
 								"char": 16,
 								"name": "opIndex",
 								"deco": "FmZm",
 								"protection": "public",
 								"endchar": 9,
-								"endline": 21
+								"endline": 22
 							},
 							{
 								"parameters": [
@@ -469,15 +1028,15 @@
 										"name": "componentId"
 									}
 								],
-								"line": 22,
+								"line": 24,
 								"kind": "function",
-								"originalType": "void(size_t componentType, size_t componentId)",
+								"originalType": "void(ComponentTypeId componentType, ComponentId componentId)",
 								"char": 14,
 								"name": "changeComponentId",
 								"deco": "FmmZv",
 								"protection": "public",
 								"endchar": 9,
-								"endline": 26
+								"endline": 28
 							},
 							{
 								"parameters": [
@@ -490,15 +1049,15 @@
 										"name": "componentId"
 									}
 								],
-								"line": 27,
+								"line": 30,
 								"kind": "function",
-								"originalType": "void(size_t componentType, size_t componentId)",
+								"originalType": "void(ComponentTypeId componentType, ComponentId componentId)",
 								"char": 14,
 								"name": "registrateComponent",
 								"deco": "FmmZv",
 								"protection": "public",
 								"endchar": 9,
-								"endline": 38
+								"endline": 42
 							},
 							{
 								"parameters": [
@@ -511,31 +1070,31 @@
 										"name": "componentId"
 									}
 								],
-								"line": 39,
+								"line": 44,
 								"kind": "function",
-								"originalType": "void(size_t componentType, size_t componentId)",
+								"originalType": "void(ComponentTypeId componentType, ComponentId componentId)",
 								"char": 14,
 								"name": "unregistrateComponent",
 								"deco": "FmmZv",
 								"protection": "public",
 								"endchar": 9,
-								"endline": 49
+								"endline": 55
 							},
 							{
-								"line": 51,
+								"line": 57,
 								"kind": "variable",
 								"originalType": "ComponentFlags",
 								"char": 24,
 								"name": "mComponentFlags",
-								"deco": "S9evoengine5utils10containers8bitarray9FlagArray",
+								"deco": "S9evoengine5utils10containers9flagarray9FlagArray",
 								"protection": "public",
 								"offset": 0
 							},
 							{
-								"line": 52,
+								"line": 58,
 								"kind": "variable",
-								"originalType": "Array!ComponentId",
-								"char": 27,
+								"originalType": "Array!ComponentTypeId",
+								"char": 31,
 								"name": "mEntityArray",
 								"deco": "S4dlib9container5array__T5ArrayTmVmi32ZQo",
 								"protection": "public",
@@ -552,7 +1111,7 @@
 								"name": "allocator"
 							}
 						],
-						"line": 55,
+						"line": 61,
 						"kind": "constructor",
 						"originalType": "(BlockAllocator allocator)",
 						"char": 5,
@@ -560,10 +1119,10 @@
 						"deco": "FC9evoengine5utils6memory14blockallocator14BlockAllocatorZCQCfQBy3ecs6entity13EntityManager",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 58
+						"endline": 64
 					},
 					{
-						"line": 60,
+						"line": 66,
 						"kind": "function",
 						"originalType": "size_t()",
 						"char": 12,
@@ -571,7 +1130,7 @@
 						"deco": "FZm",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 63
+						"endline": 69
 					},
 					{
 						"parameters": [
@@ -580,7 +1139,7 @@
 								"name": "id"
 							}
 						],
-						"line": 65,
+						"line": 71,
 						"kind": "function",
 						"originalType": "void(size_t id)",
 						"char": 10,
@@ -588,7 +1147,7 @@
 						"deco": "FmZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 68
+						"endline": 74
 					},
 					{
 						"parameters": [
@@ -601,15 +1160,15 @@
 								"name": "componentType"
 							}
 						],
-						"line": 70,
+						"line": 76,
 						"kind": "function",
-						"originalType": "bool(size_t entity, size_t componentType)",
+						"originalType": "bool(EntityId entity, ComponentTypeId componentType)",
 						"char": 10,
 						"name": "isRegistered",
 						"deco": "FmmZb",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 73
+						"endline": 79
 					},
 					{
 						"parameters": [
@@ -626,15 +1185,15 @@
 								"name": "componentId"
 							}
 						],
-						"line": 74,
+						"line": 81,
 						"kind": "function",
-						"originalType": "void(size_t entity, size_t componentType, size_t componentId)",
+						"originalType": "void(EntityId entity, ComponentTypeId componentType, ComponentId componentId)",
 						"char": 10,
 						"name": "registrateComponent",
 						"deco": "FmmmZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 77
+						"endline": 84
 					},
 					{
 						"parameters": [
@@ -651,15 +1210,15 @@
 								"name": "componentId"
 							}
 						],
-						"line": 78,
+						"line": 86,
 						"kind": "function",
-						"originalType": "void(size_t entity, size_t componentType, size_t componentId)",
+						"originalType": "void(EntityId entity, ComponentTypeId componentType, ComponentId componentId)",
 						"char": 10,
 						"name": "changeComponentId",
 						"deco": "FmmmZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 81
+						"endline": 89
 					},
 					{
 						"parameters": [
@@ -672,36 +1231,36 @@
 								"name": "componentType"
 							}
 						],
-						"line": 82,
+						"line": 91,
 						"kind": "function",
-						"originalType": "void(size_t entity, size_t componentType)",
+						"originalType": "void(EntityId entity, ComponentTypeId componentType)",
 						"char": 10,
 						"name": "unregistrateComponent",
 						"deco": "FmmZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 85
+						"endline": 94
 					},
 					{
 						"storageClass": [
 							"scope"
 						],
-						"line": 88,
+						"line": 96,
 						"kind": "destructor",
 						"char": 5,
 						"name": "~this",
 						"deco": "FNlZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 91
+						"endline": 99
 					},
 					{
-						"line": 93,
+						"line": 101,
 						"kind": "variable",
 						"originalType": "ComponentAllocator!EntityData",
 						"char": 35,
 						"name": "mData",
-						"deco": "C9evoengine5utils6memory18componentallocator__T18ComponentAllocatorTSQCqQCj3ecs6entity13EntityManager10EntityDataZQCp",
+						"deco": "C9evoengine5utils6memory18componentallocator23typedcomponentallocator__T18ComponentAllocatorTSQDpQDi3ecs6entity13EntityManager10EntityDataZQCp",
 						"protection": "public",
 						"offset": 16
 					}
@@ -727,6 +1286,12 @@
 				"char": 15,
 				"line": 3,
 				"name": "evoengine.utils.ecs.entity"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 4,
+				"name": "evoengine.utils.ecs.component.component"
 			}
 		],
 		"name": "evoengine.utils.ecs"
@@ -785,18 +1350,18 @@
 						"name": "this",
 						"deco": "FZC9evoengine5utils6memory14blockallocator14BlockAllocator",
 						"protection": "public",
-						"endchar": 19,
-						"endline": 16
+						"endchar": 5,
+						"endline": 18
 					},
 					{
-						"line": 18,
+						"line": 20,
 						"kind": "function",
 						"char": 22,
 						"name": "allocate",
 						"deco": "FZS9evoengine5utils6memory14blockallocator9BlockType",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 43
+						"endline": 45
 					},
 					{
 						"parameters": [
@@ -805,7 +1370,7 @@
 								"name": "block"
 							}
 						],
-						"line": 44,
+						"line": 47,
 						"kind": "function",
 						"originalType": "void(const BlockType block)",
 						"char": 17,
@@ -813,10 +1378,10 @@
 						"deco": "FxS9evoengine5utils6memory14blockallocator9BlockTypeZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 51
+						"endline": 54
 					},
 					{
-						"line": 53,
+						"line": 56,
 						"kind": "function",
 						"originalType": "pure size_t()",
 						"char": 12,
@@ -824,10 +1389,10 @@
 						"deco": "FNaZm",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 56
+						"endline": 59
 					},
 					{
-						"line": 57,
+						"line": 61,
 						"kind": "function",
 						"originalType": "pure size_t()",
 						"char": 12,
@@ -835,10 +1400,10 @@
 						"deco": "FNaZm",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 60
+						"endline": 64
 					},
 					{
-						"line": 62,
+						"line": 66,
 						"kind": "function",
 						"originalType": "pure nothrow size_t()",
 						"char": 12,
@@ -846,20 +1411,20 @@
 						"deco": "FNaNbZm",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 65
+						"endline": 69
 					},
 					{
 						"storageClass": [
 							"scope"
 						],
-						"line": 67,
+						"line": 71,
 						"kind": "destructor",
 						"char": 5,
 						"name": "~this",
 						"deco": "FNlZv",
 						"protection": "public",
 						"endchar": 5,
-						"endline": 73
+						"endline": 93
 					}
 				],
 				"name": "BlockAllocator",
@@ -870,7 +1435,591 @@
 	},
 	{
 		"kind": "module",
-		"file": "evoengine/utils/memory/componentallocator.d",
+		"file": "evoengine/utils/memory/classregistrator.d",
+		"members": [
+			{
+				"parameters": [
+					{
+						"kind": "type",
+						"name": "BasicClass"
+					}
+				],
+				"line": 18,
+				"kind": "template",
+				"char": 1,
+				"members": [
+					{
+						"line": 18,
+						"kind": "struct",
+						"char": 1,
+						"members": [
+							{
+								"line": 24,
+								"kind": "struct",
+								"char": 13,
+								"members": [
+									{
+										"kind": "variable",
+										"type": "BasicClass",
+										"char": 20,
+										"line": 26,
+										"name": "mObject"
+									},
+									{
+										"kind": "variable",
+										"type": "size_t",
+										"char": 16,
+										"line": 27,
+										"name": "mNameId"
+									},
+									{
+										"kind": "alias",
+										"type": "mNameId",
+										"char": 9,
+										"line": 28,
+										"name": "mNextFree"
+									}
+								],
+								"name": "ObjectData",
+								"protection": "public",
+								"comment": "\n `ObjectData` - contain object, nameId for remove string by id and alias for\n inner free list. NAME ID MUST BE UPDATE AFTER ALL REGISTER AND UNREGISTER.\n"
+							},
+							{
+								"line": 35,
+								"kind": "struct",
+								"char": 13,
+								"members": [
+									{
+										"parameters": [
+											{
+												"type": "ObjectName",
+												"storageClass": [
+													"const",
+													"ref"
+												],
+												"name": "other"
+											}
+										],
+										"line": 37,
+										"kind": "function",
+										"char": 14,
+										"name": "opEquals",
+										"type": "const bool(const ref ObjectName other)",
+										"endchar": 9,
+										"endline": 40
+									},
+									{
+										"parameters": [
+											{
+												"type": "ObjectName",
+												"storageClass": [
+													"const",
+													"ref"
+												],
+												"name": "other"
+											}
+										],
+										"line": 42,
+										"kind": "function",
+										"char": 13,
+										"name": "opCmp",
+										"type": "const int(const ref ObjectName other)",
+										"endchar": 9,
+										"endline": 47
+									},
+									{
+										"kind": "variable",
+										"type": "string",
+										"char": 16,
+										"line": 49,
+										"name": "mName"
+									},
+									{
+										"kind": "variable",
+										"type": "size_t",
+										"char": 16,
+										"line": 50,
+										"name": "mIndex"
+									}
+								],
+								"name": "ObjectName",
+								"protection": "public",
+								"comment": "\n `ObjectName` - contain name of object and object id. This struct used for create\n Set of object names for fast get id by name.\n"
+							},
+							{
+								"parameters": [
+									{
+										"type": "string",
+										"name": "name"
+									},
+									{
+										"type": "BasicClass",
+										"name": "object"
+									}
+								],
+								"line": 58,
+								"kind": "function",
+								"char": 19,
+								"name": "register",
+								"type": "size_t(string name, BasicClass object)",
+								"endchar": 5,
+								"endline": 115,
+								"comment": " registering object by name and object.\n Returns: unique object id. This object id can't be changed.\n TODO: Refactoring.\n"
+							},
+							{
+								"parameters": [
+									{
+										"type": "size_t",
+										"name": "objectId"
+									},
+									{
+										"type": "size_t",
+										"name": "nameId"
+									}
+								],
+								"line": 117,
+								"kind": "function",
+								"char": 18,
+								"name": "unregister",
+								"type": "void(size_t objectId, size_t nameId)",
+								"endchar": 5,
+								"endline": 131
+							},
+							{
+								"parameters": [
+									{
+										"type": "size_t",
+										"name": "objectId"
+									}
+								],
+								"line": 133,
+								"kind": "function",
+								"char": 17,
+								"name": "unregister",
+								"type": "void(size_t objectId)",
+								"endchar": 5,
+								"endline": 138
+							},
+							{
+								"parameters": [
+									{
+										"type": "string",
+										"name": "name"
+									}
+								],
+								"line": 140,
+								"kind": "function",
+								"char": 17,
+								"name": "unregister",
+								"type": "void(string name)",
+								"endchar": 5,
+								"endline": 151
+							},
+							{
+								"parameters": [
+									{
+										"type": "int delegate(ref BasicClass)",
+										"storageClass": [
+											"scope"
+										],
+										"name": "dg"
+									}
+								],
+								"line": 153,
+								"kind": "function",
+								"char": 9,
+								"name": "opApply",
+								"type": "int(scope int delegate(ref BasicClass) dg)",
+								"endchar": 5,
+								"endline": 172
+							},
+							{
+								"parameters": [
+									{
+										"type": "string",
+										"name": "name"
+									}
+								],
+								"line": 174,
+								"kind": "function",
+								"char": 12,
+								"name": "getId",
+								"type": "size_t(string name)",
+								"endchar": 5,
+								"endline": 183
+							},
+							{
+								"parameters": [
+									{
+										"type": "size_t",
+										"name": "index"
+									}
+								],
+								"line": 185,
+								"kind": "function",
+								"char": 16,
+								"name": "opIndex",
+								"type": "BasicClass(size_t index)",
+								"endchar": 5,
+								"endline": 201
+							},
+							{
+								"parameters": [
+									{
+										"type": "string",
+										"name": "name"
+									}
+								],
+								"line": 202,
+								"kind": "function",
+								"char": 16,
+								"name": "opIndex",
+								"type": "BasicClass(string name)",
+								"endchar": 5,
+								"endline": 211
+							},
+							{
+								"line": 213,
+								"kind": "function",
+								"char": 18,
+								"name": "sortFreeList",
+								"type": "void()",
+								"endchar": 5,
+								"endline": 251
+							},
+							{
+								"kind": "variable",
+								"type": "Array!ObjectData",
+								"char": 30,
+								"line": 253,
+								"name": "mObjects"
+							},
+							{
+								"kind": "variable",
+								"type": "Array!ObjectName",
+								"char": 30,
+								"line": 254,
+								"name": "mObjectsName"
+							},
+							{
+								"line": 256,
+								"kind": "variable",
+								"char": 20,
+								"name": "mFirstFree",
+								"init": "NoneIndex",
+								"type": "size_t"
+							},
+							{
+								"kind": "variable",
+								"type": "size_t",
+								"char": 20,
+								"line": 257,
+								"name": "mFreeCount"
+							},
+							{
+								"line": 258,
+								"kind": "variable",
+								"char": 18,
+								"name": "mActualFreeList",
+								"deco": "b",
+								"init": "false"
+							}
+						],
+						"name": "ClassRegistrator",
+						"protection": "public"
+					}
+				],
+				"name": "ClassRegistrator",
+				"protection": "public",
+				"comment": "\n`ClassRegistrator` - struct that can register object of `BasicClass`\n by name. When you register object, you get unique id. By this unique\n id you can fast: unregister, get or replace object. You can do it with\n strings, but this operation is slow. You can get object id by string and\n work with object by id.\n"
+			}
+		],
+		"name": "evoengine.utils.memory.classregistrator"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/memory/componentallocator/common.d",
+		"members": [
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 3,
+				"name": "evoengine.utils.memory.blockallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 4,
+				"name": "evoengine.utils.memory.poolallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 5,
+				"name": "evoengine.utils.memory.blockallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 6,
+				"name": "evoengine.utils.memory.poolallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 7,
+				"name": "dlib.core.memory"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 8,
+				"name": "dlib.container.array"
+			},
+			{
+				"line": 12,
+				"kind": "struct",
+				"char": 1,
+				"members": [
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "index"
+							}
+						],
+						"line": 15,
+						"kind": "constructor",
+						"originalType": "ref (size_t index)",
+						"char": 12,
+						"name": "this",
+						"deco": "FNcmZS9evoengine5utils6memory18componentallocator6common12UnitPosition",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 19,
+						"comment": "Convert inner index to UnitPosition;\n"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "k",
+								"name": "block"
+							},
+							{
+								"deco": "k",
+								"name": "id"
+							}
+						],
+						"line": 21,
+						"kind": "constructor",
+						"originalType": "ref (uint block, uint id)",
+						"char": 12,
+						"name": "this",
+						"deco": "FNckkZS9evoengine5utils6memory18componentallocator6common12UnitPosition",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 25,
+						"comment": "Construct with inner block and id.\n"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "S9evoengine5utils6memory18componentallocator6common12UnitPosition",
+								"storageClass": [
+									"ref"
+								],
+								"name": "position"
+							}
+						],
+						"line": 27,
+						"kind": "function",
+						"char": 16,
+						"name": "opCmp",
+						"deco": "FKS9evoengine5utils6memory18componentallocator6common12UnitPositionZi",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 48,
+						"comment": "Cmp this and position\n"
+					},
+					{
+						"line": 50,
+						"kind": "function",
+						"originalType": "size_t()",
+						"char": 19,
+						"name": "opCast",
+						"deco": "FZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 53,
+						"comment": "Conver this to inner index.\n"
+					},
+					{
+						"line": 55,
+						"kind": "variable",
+						"char": 17,
+						"name": "block",
+						"deco": "k",
+						"protection": "public",
+						"offset": 0
+					},
+					{
+						"line": 56,
+						"kind": "variable",
+						"char": 17,
+						"name": "id",
+						"deco": "k",
+						"protection": "public",
+						"offset": 4
+					}
+				],
+				"name": "UnitPosition",
+				"protection": "public",
+				"comment": "UnitPosition struct what contain unit position by block and index\n"
+			}
+		],
+		"name": "evoengine.utils.memory.componentallocator.common"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/memory/componentallocator/package.d",
+		"members": [
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 2,
+				"name": "evoengine.utils.memory.componentallocator.sizedcomponentallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 3,
+				"name": "evoengine.utils.memory.componentallocator.typedcomponentallocator"
+			}
+		],
+		"name": "evoengine.utils.memory.componentallocator"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/memory/componentallocator/sizedcomponentallocator.d",
+		"members": [
+			{
+				"line": 5,
+				"kind": "class",
+				"char": 1,
+				"members": [
+					{
+						"parameters": [
+							{
+								"deco": "C9evoengine5utils6memory14blockallocator14BlockAllocator",
+								"name": "blockAllocator"
+							},
+							{
+								"deco": "m",
+								"name": "size"
+							}
+						],
+						"line": 13,
+						"kind": "constructor",
+						"originalType": "(BlockAllocator blockAllocator, size_t size)",
+						"char": 12,
+						"name": "this",
+						"deco": "FC9evoengine5utils6memory14blockallocator14BlockAllocatormZCQCgQBzQBw18componentallocator23sizedcomponentallocator23SizedComponentAllocator",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 18,
+						"comment": "Default constructor. BlockAllocator needed for allocate big blocks of memory\n"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "DFAhZi",
+								"storageClass": [
+									"scope"
+								],
+								"name": "dg"
+							}
+						],
+						"line": 21,
+						"kind": "function",
+						"char": 16,
+						"name": "opApply",
+						"deco": "FMDFAhZiZi",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 30,
+						"comment": "Foreach all components\n"
+					},
+					{
+						"line": 44,
+						"kind": "function",
+						"originalType": "size_t()",
+						"char": 19,
+						"name": "allocate",
+						"deco": "FZm",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 66,
+						"comment": "Main method to allocate and get id of component\n"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "id"
+							}
+						],
+						"line": 69,
+						"kind": "function",
+						"originalType": "void(size_t id)",
+						"char": 17,
+						"name": "deallocate",
+						"deco": "FmZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 85,
+						"comment": "Main method for free allocated component by id.\n"
+					},
+					{
+						"parameters": [
+							{
+								"deco": "m",
+								"name": "id"
+							}
+						],
+						"line": 88,
+						"kind": "function",
+						"originalType": "ubyte[](size_t id)",
+						"char": 20,
+						"name": "opIndex",
+						"deco": "FmZAh",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 92,
+						"comment": "Get for reference of component by id\n"
+					},
+					{
+						"storageClass": [
+							"scope"
+						],
+						"line": 94,
+						"kind": "destructor",
+						"char": 5,
+						"name": "~this",
+						"deco": "FNlZv",
+						"protection": "public",
+						"endchar": 5,
+						"endline": 100
+					}
+				],
+				"name": "SizedComponentAllocator",
+				"protection": "public"
+			}
+		],
+		"name": "evoengine.utils.memory.componentallocator.sizedcomponentallocator"
+	},
+	{
+		"kind": "module",
+		"file": "evoengine/utils/memory/componentallocator/typedcomponentallocator.d",
 		"members": [
 			{
 				"parameters": [
@@ -879,106 +2028,17 @@
 						"name": "T"
 					}
 				],
-				"line": 9,
+				"line": 4,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 9,
+						"line": 4,
 						"kind": "class",
 						"char": 1,
 						"members": [
 							{
-								"line": 12,
-								"kind": "struct",
-								"char": 13,
-								"members": [
-									{
-										"parameters": [
-											{
-												"type": "size_t",
-												"name": "index"
-											}
-										],
-										"line": 15,
-										"kind": "constructor",
-										"char": 16,
-										"name": "this",
-										"type": "(size_t index)",
-										"endchar": 9,
-										"endline": 19,
-										"comment": "Convert inner index to UnitPosition;\n"
-									},
-									{
-										"parameters": [
-											{
-												"deco": "k",
-												"name": "block"
-											},
-											{
-												"deco": "k",
-												"name": "id"
-											}
-										],
-										"line": 21,
-										"kind": "constructor",
-										"char": 16,
-										"name": "this",
-										"type": "(uint block, uint id)",
-										"endchar": 9,
-										"endline": 25,
-										"comment": "Construct with inner block and id.\n"
-									},
-									{
-										"parameters": [
-											{
-												"type": "UnitPosition",
-												"storageClass": [
-													"ref"
-												],
-												"name": "position"
-											}
-										],
-										"line": 27,
-										"kind": "function",
-										"char": 20,
-										"name": "opCmp",
-										"type": "int(ref UnitPosition position)",
-										"endchar": 9,
-										"endline": 44,
-										"comment": "Cmp this and position\n"
-									},
-									{
-										"line": 46,
-										"kind": "function",
-										"char": 23,
-										"name": "opCast",
-										"type": "size_t()",
-										"endchar": 9,
-										"endline": 49,
-										"comment": "Conver this to inner index.\n"
-									},
-									{
-										"kind": "variable",
-										"deco": "k",
-										"char": 22,
-										"line": 51,
-										"name": "block"
-									},
-									{
-										"kind": "variable",
-										"deco": "k",
-										"char": 22,
-										"line": 52,
-										"name": "id"
-									}
-								],
-								"name": "UnitPosition",
-								"protection": "public",
-								"comment": "UnitPosition struct what contain unit position by block and index\n"
-							},
-							{
-								"line": 55,
+								"line": 7,
 								"kind": "struct",
 								"char": 13,
 								"members": [
@@ -986,7 +2046,7 @@
 										"kind": "variable",
 										"type": "IPoolAllocator!T",
 										"char": 34,
-										"line": 56,
+										"line": 9,
 										"name": "poolAllocator"
 									}
 								],
@@ -1000,13 +2060,13 @@
 										"name": "blockAllocator"
 									}
 								],
-								"line": 61,
+								"line": 13,
 								"kind": "constructor",
 								"char": 12,
 								"name": "this",
 								"type": "(BlockAllocator blockAllocator)",
 								"endchar": 5,
-								"endline": 65,
+								"endline": 17,
 								"comment": "Default constructor. BlockAllocator needed for allocate big blocks of memory\n"
 							},
 							{
@@ -1019,13 +2079,13 @@
 										"name": "dg"
 									}
 								],
-								"line": 68,
+								"line": 20,
 								"kind": "function",
 								"char": 16,
 								"name": "opApply",
 								"type": "int(scope int delegate(ref T component) dg)",
 								"endchar": 5,
-								"endline": 76,
+								"endline": 31,
 								"comment": "Foreach all components\n"
 							},
 							{
@@ -1035,13 +2095,13 @@
 										"name": "id"
 									}
 								],
-								"line": 79,
+								"line": 34,
 								"kind": "function",
 								"char": 26,
 								"name": "idToUnitPosition",
 								"type": "UnitPosition(size_t id)",
 								"endchar": 5,
-								"endline": 82,
+								"endline": 37,
 								"comment": "Help function to convert id of component to UnitPostion\n"
 							},
 							{
@@ -1051,23 +2111,23 @@
 										"name": "position"
 									}
 								],
-								"line": 84,
+								"line": 39,
 								"kind": "function",
 								"char": 20,
 								"name": "unitPositionToId",
 								"type": "size_t(UnitPosition position)",
 								"endchar": 5,
-								"endline": 87,
+								"endline": 42,
 								"comment": "Help function to convert position(UnitPosition) of component to id\n"
 							},
 							{
-								"line": 90,
+								"line": 45,
 								"kind": "function",
 								"char": 19,
 								"name": "allocate",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 110,
+								"endline": 67,
 								"comment": "Main method to allocate and get id of component\n"
 							},
 							{
@@ -1077,13 +2137,13 @@
 										"name": "id"
 									}
 								],
-								"line": 113,
+								"line": 70,
 								"kind": "function",
 								"char": 17,
 								"name": "deallocate",
 								"type": "void(size_t id)",
 								"endchar": 5,
-								"endline": 126,
+								"endline": 86,
 								"comment": "Main method for free allocated component by id.\n"
 							},
 							{
@@ -1093,27 +2153,35 @@
 										"name": "id"
 									}
 								],
-								"line": 129,
+								"line": 89,
 								"kind": "function",
 								"char": 18,
 								"name": "opIndex",
 								"type": "ref T(size_t id)",
 								"endchar": 5,
-								"endline": 133,
+								"endline": 93,
 								"comment": "Get for reference of component by id\n"
+							},
+							{
+								"line": 95,
+								"kind": "destructor",
+								"char": 5,
+								"name": "~this",
+								"endchar": 5,
+								"endline": 101
 							},
 							{
 								"kind": "variable",
 								"type": "BlockAllocator",
 								"char": 28,
-								"line": 136,
+								"line": 103,
 								"name": "mBlockAllocator"
 							},
 							{
 								"kind": "variable",
 								"type": "Array!ComponentsBlock",
 								"char": 35,
-								"line": 138,
+								"line": 105,
 								"name": "mBlocks"
 							}
 						],
@@ -1125,23 +2193,23 @@
 				"protection": "public"
 			}
 		],
-		"name": "evoengine.utils.memory.componentallocator"
+		"name": "evoengine.utils.memory.componentallocator.typedcomponentallocator"
 	},
 	{
 		"kind": "module",
 		"file": "evoengine/utils/memory/mallocator.d",
 		"members": [
 			{
-				"line": 8,
+				"line": 7,
 				"kind": "alias",
-				"char": 5,
+				"char": 6,
 				"name": "Allocator",
 				"deco": "S9evoengine5utils6memory10mallocator15MallocAllocator",
 				"protection": "public",
 				"comment": "TODO: Normal implement!!!\n"
 			},
 			{
-				"line": 10,
+				"line": 9,
 				"kind": "struct",
 				"char": 1,
 				"members": [
@@ -1152,7 +2220,7 @@
 								"name": "T"
 							}
 						],
-						"line": 12,
+						"line": 11,
 						"kind": "template",
 						"char": 16,
 						"members": [
@@ -1163,13 +2231,13 @@
 										"name": "length"
 									}
 								],
-								"line": 12,
+								"line": 11,
 								"kind": "function",
 								"char": 16,
 								"name": "allocate",
 								"type": "T[](size_t length)",
 								"endchar": 5,
-								"endline": 22
+								"endline": 25
 							}
 						],
 						"name": "allocate",
@@ -1182,7 +2250,7 @@
 								"name": "T"
 							}
 						],
-						"line": 23,
+						"line": 27,
 						"kind": "template",
 						"char": 17,
 						"members": [
@@ -1193,13 +2261,13 @@
 										"name": "data"
 									}
 								],
-								"line": 23,
+								"line": 27,
 								"kind": "function",
 								"char": 17,
 								"name": "deallocate",
 								"type": "void(T[] data)",
 								"endchar": 5,
-								"endline": 28
+								"endline": 32
 							}
 						],
 						"name": "deallocate",
@@ -1216,17 +2284,17 @@
 						"name": "allocator"
 					}
 				],
-				"line": 33,
+				"line": 37,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 33,
+						"line": 37,
 						"kind": "class",
 						"char": 1,
 						"members": [
 							{
-								"line": 38,
+								"line": 41,
 								"kind": "struct",
 								"char": 5,
 								"members": [
@@ -1234,35 +2302,35 @@
 										"kind": "variable",
 										"type": "string",
 										"char": 16,
-										"line": 40,
+										"line": 43,
 										"name": "file"
 									},
 									{
 										"kind": "variable",
 										"type": "string",
 										"char": 16,
-										"line": 41,
+										"line": 44,
 										"name": "func"
 									},
 									{
 										"kind": "variable",
 										"deco": "m",
 										"char": 15,
-										"line": 42,
+										"line": 45,
 										"name": "line"
 									},
 									{
 										"kind": "variable",
 										"deco": "b",
 										"char": 14,
-										"line": 43,
+										"line": 46,
 										"name": "free"
 									},
 									{
 										"kind": "variable",
 										"type": "SysTime",
 										"char": 17,
-										"line": 44,
+										"line": 47,
 										"name": "allocTime"
 									}
 								],
@@ -1276,7 +2344,7 @@
 										"name": "T"
 									}
 								],
-								"line": 47,
+								"line": 50,
 								"kind": "template",
 								"char": 16,
 								"members": [
@@ -1302,13 +2370,13 @@
 												"name": "line"
 											}
 										],
-										"line": 47,
+										"line": 50,
 										"kind": "function",
 										"char": 16,
 										"name": "allocate",
 										"type": "T[](size_t length, string file = __FILE__, string func = __PRETTY_FUNCTION__, ulong line = __LINE__)",
 										"endchar": 5,
-										"endline": 61
+										"endline": 65
 									}
 								],
 								"name": "allocate"
@@ -1320,7 +2388,7 @@
 										"name": "T"
 									}
 								],
-								"line": 63,
+								"line": 67,
 								"kind": "template",
 								"char": 17,
 								"members": [
@@ -1331,13 +2399,13 @@
 												"name": "data"
 											}
 										],
-										"line": 63,
+										"line": 67,
 										"kind": "function",
 										"char": 17,
 										"name": "deallocate",
 										"type": "void(T[] data)",
 										"endchar": 5,
-										"endline": 79
+										"endline": 86
 									}
 								],
 								"name": "deallocate"
@@ -1347,7 +2415,7 @@
 									"static",
 									"__gshared"
 								],
-								"line": 90,
+								"line": 102,
 								"kind": "variable",
 								"char": 45,
 								"name": "gAllocations",
@@ -1386,6 +2454,12 @@
 				"char": 15,
 				"line": 4,
 				"name": "evoengine.utils.memory.componentallocator"
+			},
+			{
+				"kind": "import",
+				"char": 15,
+				"line": 5,
+				"name": "evoengine.utils.memory.classregistrator"
 			}
 		],
 		"name": "evoengine.utils.memory"
@@ -1567,7 +2641,7 @@
 										"name": "index"
 									}
 								],
-								"line": 52,
+								"line": 53,
 								"kind": "function",
 								"char": 25,
 								"name": "opIndex",
@@ -1584,7 +2658,7 @@
 										"name": "dg"
 									}
 								],
-								"line": 53,
+								"line": 54,
 								"kind": "function",
 								"char": 20,
 								"name": "opApply",
@@ -1617,17 +2691,17 @@
 						"name": "blockType"
 					}
 				],
-				"line": 66,
+				"line": 68,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 66,
+						"line": 68,
 						"kind": "class",
 						"char": 1,
 						"members": [
 							{
-								"line": 72,
+								"line": 76,
 								"kind": "union",
 								"char": 13,
 								"members": [
@@ -1635,14 +2709,14 @@
 										"kind": "variable",
 										"type": "size_t",
 										"char": 16,
-										"line": 74,
+										"line": 78,
 										"name": "mNextFree"
 									},
 									{
 										"kind": "variable",
 										"type": "T",
 										"char": 11,
-										"line": 75,
+										"line": 79,
 										"name": "component"
 									}
 								],
@@ -1657,22 +2731,22 @@
 										"name": "allocator"
 									}
 								],
-								"line": 78,
+								"line": 82,
 								"kind": "constructor",
 								"char": 5,
 								"name": "this",
 								"type": "(blockAllocator allocator)",
 								"endchar": 5,
-								"endline": 84
+								"endline": 88
 							},
 							{
-								"line": 87,
+								"line": 90,
 								"kind": "function",
 								"char": 12,
 								"name": "allocate",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 106
+								"endline": 109
 							},
 							{
 								"parameters": [
@@ -1681,13 +2755,13 @@
 										"name": "index"
 									}
 								],
-								"line": 108,
+								"line": 111,
 								"kind": "function",
 								"char": 10,
 								"name": "deallocate",
 								"type": "void(size_t index)",
 								"endchar": 5,
-								"endline": 123
+								"endline": 129
 							},
 							{
 								"parameters": [
@@ -1696,13 +2770,13 @@
 										"name": "count"
 									}
 								],
-								"line": 125,
+								"line": 131,
 								"kind": "function",
 								"char": 18,
 								"name": "allocate",
 								"type": "Array!size_t(size_t count)",
 								"endchar": 5,
-								"endline": 144
+								"endline": 152
 							},
 							{
 								"parameters": [
@@ -1711,29 +2785,11 @@
 										"name": "deallocate"
 									}
 								],
-								"line": 146,
+								"line": 154,
 								"kind": "function",
 								"char": 10,
 								"name": "deallocate",
 								"type": "void(size_t[] deallocate)",
-								"endchar": 5,
-								"endline": 168
-							},
-							{
-								"line": 170,
-								"kind": "function",
-								"char": 12,
-								"name": "max",
-								"type": "size_t()",
-								"endchar": 5,
-								"endline": 173
-							},
-							{
-								"line": 175,
-								"kind": "function",
-								"char": 12,
-								"name": "avaliable",
-								"type": "size_t()",
 								"endchar": 5,
 								"endline": 178
 							},
@@ -1741,7 +2797,7 @@
 								"line": 180,
 								"kind": "function",
 								"char": 12,
-								"name": "allocated",
+								"name": "max",
 								"type": "size_t()",
 								"endchar": 5,
 								"endline": 183
@@ -1749,11 +2805,29 @@
 							{
 								"line": 185,
 								"kind": "function",
+								"char": 12,
+								"name": "avaliable",
+								"type": "size_t()",
+								"endchar": 5,
+								"endline": 188
+							},
+							{
+								"line": 190,
+								"kind": "function",
+								"char": 12,
+								"name": "allocated",
+								"type": "size_t()",
+								"endchar": 5,
+								"endline": 193
+							},
+							{
+								"line": 195,
+								"kind": "function",
 								"char": 18,
 								"name": "sortFreeList",
 								"type": "void()",
 								"endchar": 5,
-								"endline": 223
+								"endline": 233
 							},
 							{
 								"parameters": [
@@ -1762,13 +2836,13 @@
 										"name": "index"
 									}
 								],
-								"line": 228,
+								"line": 238,
 								"kind": "function",
 								"char": 25,
 								"name": "opIndex",
 								"type": "ForeachType!T[](size_t index)",
 								"endchar": 9,
-								"endline": 231
+								"endline": 241
 							},
 							{
 								"parameters": [
@@ -1780,37 +2854,45 @@
 										"name": "dg"
 									}
 								],
-								"line": 232,
+								"line": 243,
 								"kind": "function",
 								"char": 20,
 								"name": "opApply",
 								"type": "int(scope int delegate(ForeachType!T[] component) dg)",
 								"endchar": 9,
-								"endline": 252
+								"endline": 263
+							},
+							{
+								"line": 299,
+								"kind": "destructor",
+								"char": 5,
+								"name": "~this",
+								"endchar": 5,
+								"endline": 302
 							},
 							{
 								"kind": "variable",
 								"type": "blockAllocator",
 								"char": 20,
-								"line": 283,
+								"line": 304,
 								"name": "mAllocator"
 							},
 							{
 								"kind": "variable",
 								"type": "blockType",
 								"char": 15,
-								"line": 284,
+								"line": 305,
 								"name": "mBlock"
 							},
 							{
 								"kind": "variable",
 								"type": "Component[]",
 								"char": 17,
-								"line": 286,
+								"line": 307,
 								"name": "mArray"
 							},
 							{
-								"line": 287,
+								"line": 308,
 								"kind": "variable",
 								"char": 10,
 								"name": "mActualFreeList",
@@ -1818,7 +2900,7 @@
 								"init": "true"
 							},
 							{
-								"line": 289,
+								"line": 310,
 								"kind": "variable",
 								"char": 12,
 								"name": "mFirstFree",
@@ -1826,7 +2908,7 @@
 								"type": "size_t"
 							},
 							{
-								"line": 290,
+								"line": 311,
 								"kind": "variable",
 								"char": 12,
 								"name": "mAllocated",
@@ -1834,7 +2916,7 @@
 								"type": "size_t"
 							},
 							{
-								"line": 291,
+								"line": 312,
 								"kind": "variable",
 								"char": 12,
 								"name": "mLast",
@@ -1862,12 +2944,12 @@
 						"name": "blockType"
 					}
 				],
-				"line": 294,
+				"line": 315,
 				"kind": "template",
 				"char": 1,
 				"members": [
 					{
-						"line": 294,
+						"line": 315,
 						"kind": "class",
 						"char": 1,
 						"members": [
@@ -1882,13 +2964,13 @@
 										"name": "size"
 									}
 								],
-								"line": 296,
+								"line": 319,
 								"kind": "constructor",
 								"char": 5,
 								"name": "this",
 								"type": "(blockAllocator allocator, size_t size)",
 								"endchar": 5,
-								"endline": 308
+								"endline": 331
 							},
 							{
 								"parameters": [
@@ -1897,13 +2979,13 @@
 										"name": "index"
 									}
 								],
-								"line": 311,
+								"line": 333,
 								"kind": "function",
 								"char": 24,
 								"name": "componentIndex",
 								"type": "ref size_t(size_t index)",
 								"endchar": 5,
-								"endline": 315
+								"endline": 337
 							},
 							{
 								"parameters": [
@@ -1912,22 +2994,22 @@
 										"name": "index"
 									}
 								],
-								"line": 317,
+								"line": 339,
 								"kind": "function",
 								"char": 21,
 								"name": "componentByIndex",
 								"type": "ubyte[](size_t index)",
 								"endchar": 5,
-								"endline": 321
+								"endline": 343
 							},
 							{
-								"line": 324,
+								"line": 345,
 								"kind": "function",
 								"char": 12,
 								"name": "allocate",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 338
+								"endline": 363
 							},
 							{
 								"parameters": [
@@ -1936,13 +3018,13 @@
 										"name": "index"
 									}
 								],
-								"line": 340,
+								"line": 365,
 								"kind": "function",
 								"char": 10,
 								"name": "deallocate",
 								"type": "void(size_t index)",
 								"endchar": 5,
-								"endline": 353
+								"endline": 381
 							},
 							{
 								"parameters": [
@@ -1951,13 +3033,13 @@
 										"name": "count"
 									}
 								],
-								"line": 356,
+								"line": 383,
 								"kind": "function",
 								"char": 18,
 								"name": "allocate",
 								"type": "Array!size_t(size_t count)",
 								"endchar": 5,
-								"endline": 375
+								"endline": 404
 							},
 							{
 								"parameters": [
@@ -1966,49 +3048,49 @@
 										"name": "deallocate"
 									}
 								],
-								"line": 377,
+								"line": 406,
 								"kind": "function",
 								"char": 10,
 								"name": "deallocate",
 								"type": "void(size_t[] deallocate)",
 								"endchar": 5,
-								"endline": 399
+								"endline": 429
 							},
 							{
-								"line": 402,
+								"line": 431,
 								"kind": "function",
 								"char": 12,
 								"name": "max",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 405
+								"endline": 434
 							},
 							{
-								"line": 407,
+								"line": 436,
 								"kind": "function",
 								"char": 12,
 								"name": "avaliable",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 410
+								"endline": 439
 							},
 							{
-								"line": 412,
+								"line": 441,
 								"kind": "function",
 								"char": 12,
 								"name": "allocated",
 								"type": "size_t()",
 								"endchar": 5,
-								"endline": 415
+								"endline": 444
 							},
 							{
-								"line": 417,
+								"line": 446,
 								"kind": "function",
 								"char": 18,
 								"name": "sortFreeList",
 								"type": "void()",
 								"endchar": 5,
-								"endline": 454
+								"endline": 484
 							},
 							{
 								"parameters": [
@@ -2017,13 +3099,13 @@
 										"name": "index"
 									}
 								],
-								"line": 456,
+								"line": 486,
 								"kind": "function",
 								"char": 13,
 								"name": "opIndex",
 								"type": "ubyte[](size_t index)",
 								"endchar": 5,
-								"endline": 459
+								"endline": 489
 							},
 							{
 								"parameters": [
@@ -2035,37 +3117,45 @@
 										"name": "dg"
 									}
 								],
-								"line": 461,
+								"line": 491,
 								"kind": "function",
 								"char": 16,
 								"name": "opApply",
 								"type": "int(scope int delegate(ubyte[] component) dg)",
 								"endchar": 5,
-								"endline": 480
+								"endline": 513
+							},
+							{
+								"line": 515,
+								"kind": "destructor",
+								"char": 5,
+								"name": "~this",
+								"endchar": 5,
+								"endline": 518
 							},
 							{
 								"kind": "variable",
 								"type": "blockAllocator",
 								"char": 20,
-								"line": 483,
+								"line": 520,
 								"name": "mAllocator"
 							},
 							{
 								"kind": "variable",
 								"type": "blockType",
 								"char": 15,
-								"line": 484,
+								"line": 521,
 								"name": "mBlock"
 							},
 							{
 								"kind": "variable",
 								"type": "ubyte[]",
 								"char": 13,
-								"line": 486,
+								"line": 523,
 								"name": "mArray"
 							},
 							{
-								"line": 487,
+								"line": 524,
 								"kind": "variable",
 								"char": 10,
 								"name": "mActualFreeList",
@@ -2076,7 +3166,7 @@
 								"storageClass": [
 									"const"
 								],
-								"line": 489,
+								"line": 526,
 								"kind": "variable",
 								"char": 18,
 								"name": "mElementSize",
@@ -2086,14 +3176,14 @@
 								"storageClass": [
 									"const"
 								],
-								"line": 490,
+								"line": 527,
 								"kind": "variable",
 								"char": 18,
 								"name": "mLength",
 								"type": "size_t"
 							},
 							{
-								"line": 492,
+								"line": 529,
 								"kind": "variable",
 								"char": 12,
 								"name": "mFirstFree",
@@ -2101,7 +3191,7 @@
 								"type": "size_t"
 							},
 							{
-								"line": 493,
+								"line": 530,
 								"kind": "variable",
 								"char": 12,
 								"name": "mAllocated",
@@ -2109,7 +3199,7 @@
 								"type": "size_t"
 							},
 							{
-								"line": 494,
+								"line": 531,
 								"kind": "variable",
 								"char": 12,
 								"name": "mLast",
@@ -2152,5 +3242,11 @@
 			}
 		],
 		"name": "evoengine.utils"
+	},
+	{
+		"kind": "module",
+		"file": "../../../../.dub/packages/silly-1.1.1/silly/silly.d",
+		"members": [],
+		"name": "silly"
 	}
 ]

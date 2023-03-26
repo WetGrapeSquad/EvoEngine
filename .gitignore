@@ -2,3 +2,4 @@ libevoengine.a
 evoengine-test-library
 .vscode
 docs
+multipleTestRuns.sh
