@@ -222,6 +222,7 @@ unittest
             buffer.write(321);
 
 
+            debug assert(buffer.data.length == 111);
             static if(order == Order.FIFO)
             {
                 assert(buffer.read!int == 123);
@@ -236,6 +237,7 @@ unittest
                 assert(cast(string)buffer.read!string.data() == "test");
                 assert(buffer.read!int == 123);
             }
+            debug assert(buffer.data.length == 0);
         }
     }
 }
