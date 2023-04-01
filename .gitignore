@@ -3,3 +3,5 @@ evoengine-test-library
 .vscode
 docs
 multipleTestRuns.sh
+callgrind_out
+callgrind_out.demangled
