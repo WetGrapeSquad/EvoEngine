@@ -110,6 +110,8 @@ unittest
 {
     import std.algorithm, dlib.core.memory : New, Delete;
     import evoengine.utils.memory.blockallocator;
+    import std.datetime, std.stdio;
+    auto start = Clock.currTime;
 
     BlockAllocator blockAllocator = New!BlockAllocator;
     ComponentAllocator!int componentAllocator = New!(ComponentAllocator!int)(blockAllocator);
@@ -180,4 +182,5 @@ unittest
             assert(componentAllocator[id] == 5, "Assignment and/or getting value by id is't working!");
         }
     }
+    writeln(Clock.currTime - start);
 }

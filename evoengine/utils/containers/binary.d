@@ -11,6 +11,18 @@ enum Order
     FILO,   /// `F`irst `I`n `L`ast `O`ut
     FIFO    /// `F`irst `I`n `F`irst `O`ut
 }
+/** 
+ * Interface for all serializable data types working with BinaryBuffer. 
+ * In the future it will be used as the main tool for saving/loading scenes, 
+ * models, etc.
+ */
+interface Serializable
+{
+    /// Serialize data into BinaryBuffer.
+    void serialize(Order order)(ref BinaryBuffer!order buffer);
+    /// Deserialize data from BinaryBuffer.
+    void deserialize(Order order)(ref BinaryBuffer!order buffer);
+}
 
 /** 
  * `BinaryBuffer` implement binary serialization structure. This structure
@@ -185,6 +197,27 @@ struct BinaryBuffer(Order order = Order.FILO)
             this.innerWrite(cast(const T)data);   
         }
     }
+    public void write(T)(T obj)
+    if(is(T == Serializable))
+    {
+        debug{
+            string type = T.stringof;
+            static if(order == Order.FILO)
+            {
+                obj.serialize(*this);  
+                this.innerWrite(type);
+            }
+            else
+            {
+                this.innerWrite(type);
+                obj.serialize(*this);    
+            }
+        }
+        else
+        {
+            obj.serialize(*this);
+        }
+    }
 
     /// Wrap on top innerRead. Enable debuging/checking in `BinaryBuffer`.
     public toArrayType!T read(T)()
@@ -197,6 +230,17 @@ struct BinaryBuffer(Order order = Order.FILO)
         }
         return this.innerRead!T;
     }
+    public void read(T)(T obj)
+    if(is(T == Serializable))
+    {
+        debug
+        {
+            string str = this.innerRead!(string).data.idup;
+            assert(str == T.stringof, str ~ " != " ~ T.stringof);
+        }
+        obj.deserialize(this);
+    }
+
     ubyte[] data()
     {
         return this.mBuffer.data;

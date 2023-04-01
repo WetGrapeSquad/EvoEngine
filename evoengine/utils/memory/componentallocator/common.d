@@ -2,8 +2,6 @@ module evoengine.utils.memory.componentallocator.common;
 
 public import evoengine.utils.memory.blockallocator;
 public import evoengine.utils.memory.poolallocator;
-public import evoengine.utils.memory.blockallocator;
-public import evoengine.utils.memory.poolallocator;
 public import dlib.core.memory;
 public import dlib.container.array;
 
