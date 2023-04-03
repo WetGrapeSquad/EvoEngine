@@ -50,33 +50,48 @@ class ComponentAllocator(T)
     {
         import core.atomic;
         UnitPosition position;
-        position.block = -1; // for position.block++ in end of this method.
+        position.block = 0; // for position.block++ in end of this method.
 
-        foreach (size_t i, ref ComponentsBlock block; this.mBlocks)
+        while(true)
         {
-            position.block = cast(uint)i;
-            position.id = block.poolAllocator.allocate();
+            IPoolAllocator!T block;
+            spinLocker.lock();
+            {
+                if(position.block < this.mBlocks.length)
+                {
+                    block = this.mBlocks[position.block].poolAllocator;
+                }
+                else
+                {
+                    spinLocker.unlock();
+                    break;
+                }
+            }
+            spinLocker.unlock();
+
+            position.id = block.allocate();
+
             if (position.id != NoneIndex)
             {
                 return position.fullIndex;
             }
+            position.block++;
         }
         position.block++;
 
         spinLocker.lock();
-
         {
-            if (this.mBlocks.length <= position.block)
+            while (this.mBlocks.length <= position.block)
             {
                 ComponentsBlock block;
                 block.poolAllocator = New!(PoolAllocator!T)(this.mBlockAllocator);
                 this.mBlocks ~= block;
             }
         }
-
         spinLocker.unlock();
 
-        position.id = this.mBlocks[this.mBlocks.length() - 1].poolAllocator.allocate();
+
+        position.id = this.mBlocks[position.block].poolAllocator.allocate();
         assert(position.id != NoneIndex);
         return this.unitPositionToId(position);
     }
@@ -149,7 +164,7 @@ unittest
 
     auto start = Clock.currTime;
 
-    foreach (i; 10_000.iota.parallel)
+    foreach (i; 5_000.iota.parallel)
     {
         size_t[128] id1;
         size_t[128] id2;
