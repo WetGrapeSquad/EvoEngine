@@ -41,11 +41,6 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     /// Allocate one element and get her index.
     public uint allocate()
     {
-        if (this.avaliable == 0)
-        {
-            return NoneIndex;
-        }
-
         while (true)
         {
             uint firstFree = this.mFirstFree.atomicLoad;
@@ -56,7 +51,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             }
             uint nextFree = this.mArray[firstFree].mNextFree;
 
-            if (!casWeak(&this.mFirstFree, firstFree, nextFree))
+            if (!cas(&this.mFirstFree, firstFree, nextFree))
             {
                 continue;
             }
@@ -70,7 +65,8 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     /// Deallocate one element by her index.
     public void deallocate(uint index)
     {
-        assert(!this.mArray[index].mFree, "Double free detected");
+        import std.conv: to;
+        assert(!this.mArray[index].mFree, "Double free detected " ~ index.to!string);
         this.mArray[index].mFree = true;
 
         while (true)
@@ -78,7 +74,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             uint firstFree = this.mFirstFree.atomicLoad;
             this.mArray[index].mNextFree = firstFree;
 
-            if (casWeak(&this.mFirstFree, firstFree, index))
+            if (cas(&this.mFirstFree, firstFree, index))
             {
                 this.mAllocated.atomicFetchSub(1);
                 return;
@@ -106,7 +102,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             }
             uint nextFree = this.mArray[firstFree].mNextFree;
 
-            if (!casWeak(&this.mFirstFree, firstFree, nextFree))
+            if (!cas(&this.mFirstFree, firstFree, nextFree))
             {
                 continue;
             }
@@ -127,7 +123,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             uint firstFree = this.mFirstFree.atomicLoad;
             this.mArray[deallocate[0]].mNextFree = firstFree;
 
-            if (casWeak(&this.mFirstFree, firstFree, deallocate[0]))
+            if (cas(&this.mFirstFree, firstFree, deallocate[0]))
             {
                 this.mAllocated.atomicFetchSub(1);
                 deallocate = deallocate[1 .. $];
@@ -154,7 +150,8 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     {
         ForeachType!T[] opIndex(uint index)
         {
-            assert(!this.mArray[index].mFree, "Try access to deallocated element");
+            import std.conv: to;
+            assert(!this.mArray[index].mFree, "Try access to deallocated element" ~ index.to!string);
             return this.mArray[index].component;
         }
 
@@ -178,7 +175,8 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     {
         ref T opIndex(uint index)
         {
-            assert(!this.mArray[index].mFree, "Try access to deallocated element");
+            import std.conv: to;
+            assert(!this.mArray[index].mFree, "Try access to deallocated element" ~ index.to!string);
             return this.mArray[index].component;
         }
 
@@ -224,34 +222,44 @@ unittest
 
 
     BlockAllocator allocator = New!BlockAllocator;
-    IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
 
     scope (exit)
     {
-        Delete(poolAllocator);
+        //Delete(poolAllocator);
         Delete(allocator);
     }
 
-    foreach (i; 100.iota.parallel)
+    foreach(i; 0..1000)
     {
-        uint[] elements;
-        elements.length = poolAllocator.avaliable / 100;
-
-        foreach (ref element; elements)
+        IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
+        
+        scope (exit)
         {
-            element = poolAllocator.allocate;
-            poolAllocator[element] = 4;
-        }
-        foreach (ref element; elements[0 .. $ / 2])
-        {
-            assert(poolAllocator[element] == 4);
-            poolAllocator.deallocate(element);
+            Delete(poolAllocator);
+            //Delete(allocator);
         }
 
-        foreach (ref element; elements[$ / 2 .. $])
+        foreach (i; 100.iota.parallel(10))
         {
-            assert(poolAllocator[element] == 4);
-            poolAllocator.deallocate(element);
+            uint[] elements;
+            elements.length = poolAllocator.avaliable / 100;
+
+            foreach (ref element; elements)
+            {
+                element = poolAllocator.allocate;
+                poolAllocator[element] = 4;
+            }
+            foreach (ref element; elements[0 .. $ / 2])
+            {
+                assert(poolAllocator[element] == 4);
+                poolAllocator.deallocate(element);
+            }
+
+            foreach (ref element; elements[$ / 2 .. $])
+            {
+                assert(poolAllocator[element] == 4);
+                poolAllocator.deallocate(element);
+            }
         }
     }
 }

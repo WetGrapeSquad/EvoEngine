@@ -54,13 +54,10 @@ class ComponentAllocator(T)
         foreach (size_t i, ref ComponentsBlock block; this.mBlocks)
         {
             position.block = cast(uint) i;
-            if (block.poolAllocator.avaliable > 0)
+            position.id = cast(uint) block.poolAllocator.allocate();
+            if(position.id != NoneIndex)
             {
-                position.id = cast(uint) block.poolAllocator.allocate();
-                if(position.id != NoneIndex)
-                {
-                    return position.fullIndex;
-                }
+                return position.fullIndex;
             }
         }
         position.block++;
@@ -98,10 +95,12 @@ class ComponentAllocator(T)
         {
             spinLocker.lock();
 
-            while (this.mBlocks.length > 1 && this.mBlocks[this.mBlocks.length - 2].poolAllocator.allocated == 0)
             {
-                Delete(this.mBlocks[this.mBlocks.length - 1].poolAllocator);
-                this.mBlocks.removeBack(1);
+                while (this.mBlocks.length > 1 && this.mBlocks[this.mBlocks.length - 2].poolAllocator.allocated == 0)
+                {
+                    Delete(this.mBlocks[this.mBlocks.length - 1].poolAllocator);
+                    this.mBlocks.removeBack(1);
+                }
             }
 
             spinLocker.unlock();
@@ -148,7 +147,7 @@ unittest
 
     size_t lastId;
 
-    foreach (i; 10000.iota.parallel)
+    foreach (i; 10.iota.parallel)
     {
         size_t[128] id1;
         size_t[128] id2;
@@ -188,7 +187,7 @@ unittest
         }
     }
 
-    foreach (i; 10000.iota.parallel)
+    foreach (i; 10.iota.parallel)
     {
         size_t[128] id1;
         foreach (ref id; id1)

@@ -82,7 +82,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             }
             uint nextFree = this.getNextFree(firstFree);
 
-            if (!casWeak(&this.mFirstFree, firstFree, nextFree))
+            if (!cas(&this.mFirstFree, firstFree, nextFree))
             {
                 continue;
             }
@@ -103,7 +103,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             uint firstFree = this.mFirstFree.atomicLoad;
             this.getNextFree(index) = firstFree;
 
-            if (casWeak(&this.mFirstFree, firstFree, index))
+            if (cas(&this.mFirstFree, firstFree, index))
             {
                 this.mAllocated.atomicFetchSub(1);
                 return;
@@ -131,7 +131,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             }
             uint nextFree = this.getNextFree(firstFree);
 
-            if (!casWeak(&this.mFirstFree, firstFree, nextFree))
+            if (!cas(&this.mFirstFree, firstFree, nextFree))
             {
                 continue;
             }
@@ -155,7 +155,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
             uint firstFree = this.mFirstFree.atomicLoad;
             this.getNextFree(deallocate[0]) = firstFree;
 
-            if (casWeak(&this.mFirstFree, firstFree, deallocate[0]))
+            if (cas(&this.mFirstFree, firstFree, deallocate[0]))
             {
                 this.mAllocated.atomicFetchSub(1);
                 deallocate = deallocate[1 .. $];
