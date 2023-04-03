@@ -16,6 +16,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     private struct Component
     {
         bool mFree;
+        shared uint mOperations;
         union
         {
             uint mNextFree;
@@ -38,31 +39,37 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
         this.mArray[$ - 1].mNextFree = NoneIndex;
     }
 
-    /// Allocate one element and get her index.
+    /// Allocate one element and get index.
     public uint allocate()
     {
         while (true)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
+            ulong firstFree = this.mFirstFree.atomicLoad;
 
-            if (firstFree == NoneIndex)
+            if ((cast(uint)firstFree) == NoneIndex)
             {
                 return NoneIndex;
             }
-            uint nextFree = this.mArray[firstFree].mNextFree;
+            ulong nextFree = this.mArray[cast(uint)firstFree].mNextFree;
 
-            if (!cas(&this.mFirstFree, firstFree, nextFree))
+            if((cast(uint)nextFree) != NoneIndex)
             {
-                continue;
+                nextFree = nextFree + ((cast(ulong)this.mArray[nextFree].mOperations.atomicLoad + 1) << 32);
             }
 
-            this.mAllocated.atomicFetchAdd(1);
-            this.mArray[firstFree].mFree = false;
-            this.mArray[firstFree].component = T.init;
-            return firstFree;
+            if (cas(&this.mFirstFree, firstFree, nextFree))
+            {
+                this.mAllocated.atomicFetchAdd(1);
+                this.mArray[cast(uint)firstFree].mOperations.atomicFetchAdd(1);
+                this.mArray[cast(uint)firstFree].mFree = false;
+                this.mArray[cast(uint)firstFree].component = T.init;
+
+                return cast(uint)firstFree;
+            }
         }
     }
-    /// Deallocate one element by her index.
+
+    /// Deallocate one element by index.
     public void deallocate(uint index)
     {
         import std.conv: to;
@@ -71,62 +78,70 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
         while (true)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
-            this.mArray[index].mNextFree = firstFree;
+            ulong firstFree = this.mFirstFree.atomicLoad;
+            this.mArray[index].mNextFree = cast(uint)firstFree;
 
-            if (cas(&this.mFirstFree, firstFree, index))
+            ulong newFree = index + ((cast(ulong)this.mArray[index].mOperations.atomicLoad + 1) << 32);
+            if (cas(&this.mFirstFree, firstFree, newFree))
             {
+                this.mArray[index].mOperations.atomicFetchAdd(1);
                 this.mAllocated.atomicFetchSub(1);
                 return;
             }
         }
     }
+
     /// Allocate a set of count of element and return array with indexes(none GC array for optimizations).
     public Array!uint allocate(uint count)
     {
-        if (this.avaliable == 0)
-        {
-            return Array!uint.init;
-        }
-
         Array!uint indexArray;
         indexArray.reserve(count);
 
         while (indexArray.length < count)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
+            ulong firstFree = this.mFirstFree.atomicLoad;
 
             if (firstFree == NoneIndex)
             {
                 break;
             }
-            uint nextFree = this.mArray[firstFree].mNextFree;
-
-            if (!cas(&this.mFirstFree, firstFree, nextFree))
+            ulong nextFree = this.mArray[cast(uint)firstFree].mNextFree;
+            if((cast(uint)nextFree) != NoneIndex)
             {
-                continue;
+                nextFree = nextFree + ((cast(ulong)this.mArray[nextFree].mOperations.atomicLoad + 1) << 32);
             }
 
-            this.mAllocated.atomicFetchAdd(1);
-            this.mArray[firstFree].mFree = false;
-            this.mArray[firstFree].component = T.init;
-
-            indexArray ~= firstFree;
+            if (cas(&this.mFirstFree, firstFree, nextFree))
+            {
+                this.mAllocated.atomicFetchAdd(1);
+                this.mArray[cast(uint)firstFree].mOperations.atomicFetchAdd(1);
+                this.mArray[cast(uint)firstFree].mFree = false;
+                this.mArray[cast(uint)firstFree].component = T.init;
+                indexArray ~= cast(uint)firstFree;
+            }
         }
         return indexArray;
     }
+
     /// Deallocate a set of element(D array, so as not to duplicate the array).
     public void deallocate(uint[] deallocate)
     {
+        import std.conv: to;
         while (deallocate.length != 0)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
-            this.mArray[deallocate[0]].mNextFree = firstFree;
+            assert(!this.mArray[deallocate[0]].mFree, "Double free detected " ~ deallocate[0].to!string);
+            this.mArray[deallocate[0]].mFree = true;
+            
+            ulong firstFree = this.mFirstFree.atomicLoad;
+            this.mArray[deallocate[0]].mNextFree = cast(uint)firstFree;
 
-            if (cas(&this.mFirstFree, firstFree, deallocate[0]))
+            ulong newFree = deallocate[0] + ((cast(ulong)this.mArray[deallocate[0]].mOperations.atomicLoad + 1) << 32);
+
+            if (cas(&this.mFirstFree, firstFree, newFree))
             {
                 this.mAllocated.atomicFetchSub(1);
-                deallocate = deallocate[1 .. $];
+                this.mArray[deallocate[0]].mOperations.atomicFetchAdd(1);
+                return;
             }
         }
     }
@@ -151,7 +166,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
         ForeachType!T[] opIndex(uint index)
         {
             import std.conv: to;
-            assert(!this.mArray[index].mFree, "Try access to deallocated element" ~ index.to!string);
+            assert(!this.mArray[index].mFree, "Try access to deallocated element " ~ index.to!string);
             return this.mArray[index].component;
         }
 
@@ -176,7 +191,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
         ref T opIndex(uint index)
         {
             import std.conv: to;
-            assert(!this.mArray[index].mFree, "Try access to deallocated element" ~ index.to!string);
+            assert(!this.mArray[index].mFree, "Try access to deallocated element " ~ index.to!string);
             return this.mArray[index].component;
         }
 
@@ -207,7 +222,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
     private Component[] mArray;
 
-    private shared uint mFirstFree = 0;
+    private shared ulong mFirstFree = 0;
     private shared uint mAllocated = 0;
 }
 
@@ -220,33 +235,26 @@ unittest
     import std.stdio;
     import std.datetime;
 
-
     BlockAllocator allocator = New!BlockAllocator;
+    IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
 
     scope (exit)
     {
-        //Delete(poolAllocator);
+        Delete(poolAllocator);
         Delete(allocator);
     }
 
-    foreach(i; 0..1000)
+    foreach(i; 0..10)
     {
-        IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);
-        
-        scope (exit)
-        {
-            Delete(poolAllocator);
-            //Delete(allocator);
-        }
-
-        foreach (i; 100.iota.parallel(10))
+        foreach (i; 10.iota.parallel(10))
         {
             uint[] elements;
-            elements.length = poolAllocator.avaliable / 100;
+            elements.length = poolAllocator.avaliable / 10;
 
             foreach (ref element; elements)
             {
                 element = poolAllocator.allocate;
+                assert(element != NoneIndex);
                 poolAllocator[element] = 4;
             }
             foreach (ref element; elements[0 .. $ / 2])

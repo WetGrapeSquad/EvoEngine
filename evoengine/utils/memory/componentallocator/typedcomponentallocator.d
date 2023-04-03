@@ -122,9 +122,7 @@ unittest
         Delete(blockAllocator);
     }
 
-    size_t lastId;
-
-    foreach (i; 0 .. 10)
+    foreach (i; 0 .. 100)
     {
         size_t[128] id1;
         size_t[128] id2;
@@ -164,7 +162,7 @@ unittest
         }
     }
 
-    foreach (i; 0 .. 10)
+    foreach (i; 0 .. 100)
     {
         size_t[128] id1;
         foreach (ref id; id1)

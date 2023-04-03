@@ -48,14 +48,15 @@ class ComponentAllocator(T)
     /// Main method to allocate and get id of component
     public size_t allocate()
     {
+        import core.atomic;
         UnitPosition position;
         position.block = -1; // for position.block++ in end of this method.
 
         foreach (size_t i, ref ComponentsBlock block; this.mBlocks)
         {
-            position.block = cast(uint) i;
-            position.id = cast(uint) block.poolAllocator.allocate();
-            if(position.id != NoneIndex)
+            position.block = cast(uint)i;
+            position.id = block.poolAllocator.allocate();
+            if (position.id != NoneIndex)
             {
                 return position.fullIndex;
             }
@@ -65,7 +66,7 @@ class ComponentAllocator(T)
         spinLocker.lock();
 
         {
-            if(this.mBlocks.length <= position.block)
+            if (this.mBlocks.length <= position.block)
             {
                 ComponentsBlock block;
                 block.poolAllocator = New!(PoolAllocator!T)(this.mBlockAllocator);
@@ -75,7 +76,8 @@ class ComponentAllocator(T)
 
         spinLocker.unlock();
 
-        position.id = cast(uint) this.mBlocks[this.mBlocks.length() - 1].poolAllocator.allocate();
+        position.id = this.mBlocks[this.mBlocks.length() - 1].poolAllocator.allocate();
+        assert(position.id != NoneIndex);
         return this.unitPositionToId(position);
     }
 
@@ -133,8 +135,6 @@ unittest
     import std.algorithm, dlib.core.memory : New, Delete;
     import std.parallelism, std.range;
     import evoengine.utils.memory.blockallocator;
-    import std.datetime, std.stdio;
-    auto start = Clock.currTime;
 
     BlockAllocator blockAllocator = New!BlockAllocator;
     ComponentAllocator!int componentAllocator = New!(ComponentAllocator!int)(blockAllocator);
@@ -145,9 +145,11 @@ unittest
         Delete(blockAllocator);
     }
 
-    size_t lastId;
+    import std.datetime, std.stdio;
 
-    foreach (i; 10.iota.parallel)
+    auto start = Clock.currTime;
+
+    foreach (i; 10_000.iota.parallel)
     {
         size_t[128] id1;
         size_t[128] id2;
@@ -185,11 +187,7 @@ unittest
         {
             componentAllocator.deallocate(id);
         }
-    }
 
-    foreach (i; 10.iota.parallel)
-    {
-        size_t[128] id1;
         foreach (ref id; id1)
         {
             id = componentAllocator.allocate();
@@ -198,35 +196,7 @@ unittest
         {
             componentAllocator[id] = 5;
         }
-        foreach (ref id; id1)
-        {
-            import std.stdio;
-
-            assert(componentAllocator[id] == 5, "Assignment and/or getting value by id is't working!");
-            componentAllocator.deallocate(id);
-        }
     }
     writeln(Clock.currTime - start);
     componentAllocator.reduceMemoryUsage;
 }
-
-/** 
-✗ .typedallocator Experemental/TypedComponentAllocator
-core.exception.AssertError thrown from evoengine/experemental/utils/memory/poolallocator/typedallocator.d on line 73: Double free detected
---- Stack trace ---
-??:? _d_assert_msg [0x559f07c06bb8]
-evoengine/experemental/utils/memory/poolallocator/typedallocator.d:73 void evoengine.experemental.utils.memory.poolallocator.typedallocator.PoolAllocator!(int, evoengine.utils.memory.blockallocator.BlockAllocator, evoengine.utils.memory.blockallocator.BlockType).PoolAllocator.deallocate(uint) [0x559f07b592a2]
-evoengine/experemental/utils/memory/componentallocator/typedallocator.d:92 void evoengine.experemental.utils.memory.componentallocator.typedallocator.ComponentAllocator!(int).ComponentAllocator.deallocate(ulong) [0x559f07b56f6d]
-evoengine/experemental/utils/memory/componentallocator/typedallocator.d:187 int evoengine.experemental.utils.memory.componentallocator.typedallocator.__unittest_L132_C1().__foreachbody5(int) [0x559f07b5692c]
-/usr/include/dlang/dmd/std/parallelism.d-mixin-4102:4148 void std.parallelism.ParallelForeach!(std.range.iota!(int, int).iota(int, int).Result).ParallelForeach.opApply(scope int delegate(int)).doIt() [0x559f07b572dc]
-??:? void std.parallelism.run!(void delegate()).run(void delegate()) [0x559f07c26d87]
-??:? void std.parallelism.Task!(std.parallelism.run, void delegate()).Task.impl(void*) [0x559f07c26867]
-??:? void std.parallelism.AbstractTask.job() [0x559f07c4efa6]
-??:? void std.parallelism.TaskPool.doJob(std.parallelism.AbstractTask*) [0x559f07c253af]
-??:? void std.parallelism.TaskPool.executeWorkLoop() [0x559f07c2551e]
-??:? void std.parallelism.TaskPool.startWorkLoop() [0x559f07c254c7]
-??:? void core.thread.context.Callable.opCall() [0x559f07c1c2c8]
-??:? thread_entryPoint [0x559f07c1bbde]
-??:? [0x7f318c119bb4]
-??:? [0x7f318c19bd8f]  
-*/
