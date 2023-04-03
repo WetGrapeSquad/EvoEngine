@@ -5,20 +5,20 @@ import dlib.container.array;
 import std.traits;
 import core.atomic;
 
-
 class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType = BlockType)
     : IPoolAllocator!(ubyte[])
 {
-
     /*  
     *   Structure of block element. Structure size multiple uint.sizeof.
     *   mFree -> 0 byte
-    *   mNextFree -> uint.sizeof byte
-    *   memory -> uint.sizeof byte
+    *   mOperations -> uint.sizeof byte
+    *   mNextFree -> uint.sizeof*2 byte
+    *   memory -> uint.sizeof*2 byte
     *
     *   struct Component
     *   {
     *       bool mFree;
+    *       shared uint mOperations;
     *       union
     *       {
     *           uint mNextFree;
@@ -35,21 +35,16 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
         this.mArray = cast(ubyte[]) this.mBlock.data;
 
         this.mComponentSize = size;
-        this.mElementSize = shrink(cast(uint)(uint.sizeof * 2) + size, cast(uint)uint.sizeof);
+        this.mElementSize = shrink(cast(uint)(uint.sizeof * 3) + size, cast(uint) uint.sizeof);
         this.mLength = cast(uint) mArray.length / this.mElementSize;
 
         for (uint i = 0; i < this.mLength; i++)
         {
             this.getFreeFlag(i) = true;
             this.getNextFree(i) = i + 1;
+            this.getOperations(i).atomicStore(0);
         }
         this.getNextFree(this.mLength - 1) = NoneIndex;
-    }
-
-    final pragma(inline) private ref uint getNextFree(uint index)
-    {
-        uint* indexPointer = cast(uint*)(&this.mArray[index * this.mElementSize + cast(uint)uint.sizeof]);
-        return *indexPointer;
     }
 
     final pragma(inline) private ref bool getFreeFlag(uint index)
@@ -58,107 +53,132 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
         return *freeFlag;
     }
 
+    final pragma(inline) private ref shared(uint) getOperations(uint index)
+    {
+        shared(uint)* component = cast(shared(uint)*)(
+            &this.mArray[index * this.mElementSize + uint.sizeof]);
+        return *component;
+    }
+
     final pragma(inline) private ubyte[] getComponent(uint index)
     {
-        ubyte* component = cast(ubyte*)(&this.mArray[index * this.mElementSize + uint.sizeof]);
+        ubyte* component = cast(ubyte*)(&this.mArray[index * this.mElementSize + uint.sizeof * 2]);
         return component[0 .. this.mComponentSize];
     }
 
-    /// Allocate one element and get her index.
+    final pragma(inline) private ref uint getNextFree(uint index)
+    {
+        uint* indexPointer = cast(uint*)(&this.mArray[index * this.mElementSize + uint.sizeof * 2]);
+        return *indexPointer;
+    }
+
+    /// Allocate one element and get index.
     public uint allocate()
     {
-        if (this.avaliable == 0)
-        {
-            return NoneIndex;
-        }
-
         while (true)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
+            ulong firstFree = this.mFirstFree.atomicLoad;
 
-            if (firstFree == NoneIndex)
+            if ((cast(uint) firstFree) == NoneIndex)
             {
                 return NoneIndex;
             }
-            uint nextFree = this.getNextFree(firstFree);
+            ulong nextFree = this.getNextFree(cast(uint) firstFree);
 
-            if (!cas(&this.mFirstFree, firstFree, nextFree))
+            if ((cast(uint) nextFree) != NoneIndex)
             {
-                continue;
+                nextFree = nextFree + ((cast(ulong) this.getOperations(cast(uint) nextFree)
+                        .atomicLoad + 1) << 32);
             }
 
-            this.mAllocated.atomicFetchAdd(1);
-            this.getFreeFlag(firstFree) = false;
-            return firstFree;
+            if (cas(&this.mFirstFree, firstFree, nextFree))
+            {
+                this.mAllocated.atomicFetchAdd(1);
+                this.getOperations(cast(uint) firstFree).atomicFetchAdd(1);
+                this.getFreeFlag(cast(uint) firstFree) = false;
+
+                return cast(uint) firstFree;
+            }
         }
     }
-    /// Deallocate one element by her index.
+
+    /// Deallocate one element by index.
     public void deallocate(uint index)
     {
-        assert(!this.getFreeFlag(index), "Double free detected");
+        import std.conv : to;
+
+        assert(!this.getFreeFlag(index), "Double free detected " ~ index.to!string);
         this.getFreeFlag(index) = true;
 
         while (true)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
-            this.getNextFree(index) = firstFree;
+            ulong firstFree = this.mFirstFree.atomicLoad;
+            this.getNextFree(index) = cast(uint) firstFree;
 
-            if (cas(&this.mFirstFree, firstFree, index))
+            ulong newFree = index + ((cast(ulong) this.getOperations(index).atomicLoad + 1) << 32);
+            if (cas(&this.mFirstFree, firstFree, newFree))
             {
+                this.getOperations(index).atomicFetchAdd(1);
                 this.mAllocated.atomicFetchSub(1);
                 return;
             }
         }
     }
+
     /// Allocate a set of count of element and return array with indexes(none GC array for optimizations).
     public Array!uint allocate(uint count)
     {
-        if (this.avaliable == 0)
-        {
-            return Array!uint.init;
-        }
-
         Array!uint indexArray;
         indexArray.reserve(count);
 
         while (indexArray.length < count)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
+            ulong firstFree = this.mFirstFree.atomicLoad;
 
             if (firstFree == NoneIndex)
             {
                 break;
             }
-            uint nextFree = this.getNextFree(firstFree);
-
-            if (!cas(&this.mFirstFree, firstFree, nextFree))
+            ulong nextFree = this.getNextFree(cast(uint) firstFree);
+            if ((cast(uint) nextFree) != NoneIndex)
             {
-                continue;
+                nextFree = nextFree + ((cast(ulong) this.getOperations(cast(uint) nextFree)
+                        .atomicLoad + 1) << 32);
             }
 
-            this.mAllocated.atomicFetchAdd(1);
-            this.getFreeFlag(firstFree) = false;
-
-            indexArray ~= firstFree;
+            if (cas(&this.mFirstFree, firstFree, nextFree))
+            {
+                this.mAllocated.atomicFetchAdd(1);
+                this.getOperations(cast(uint) firstFree).atomicFetchAdd(1);
+                this.getFreeFlag(cast(uint) firstFree) = false;
+                indexArray ~= cast(uint) firstFree;
+            }
         }
         return indexArray;
     }
+
     /// Deallocate a set of element(D array, so as not to duplicate the array).
     public void deallocate(uint[] deallocate)
     {
-        foreach (index; deallocate)
-        {
-            this.getFreeFlag(index) = true;
-        }
+        import std.conv : to;
+
         while (deallocate.length != 0)
         {
-            uint firstFree = this.mFirstFree.atomicLoad;
-            this.getNextFree(deallocate[0]) = firstFree;
+            assert(!this.getFreeFlag(deallocate[0]), "Double free detected " ~ deallocate[0]
+                .to!string);
+            this.getFreeFlag(deallocate[0]) = true;
 
-            if (cas(&this.mFirstFree, firstFree, deallocate[0]))
+            ulong firstFree = this.mFirstFree.atomicLoad;
+            this.getNextFree(deallocate[0]) = cast(uint) firstFree;
+
+            ulong newFree = deallocate[0] + ((cast(ulong) this.getOperations(deallocate[0])
+                .atomicLoad + 1) << 32);
+
+            if (cas(&this.mFirstFree, firstFree, newFree))
             {
                 this.mAllocated.atomicFetchSub(1);
-                deallocate = deallocate[1 .. $];
+                this.getOperations(deallocate[0]).atomicFetchAdd(1);
+                return;
             }
         }
     }
@@ -218,7 +238,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     private const uint mComponentSize; /// Component size(allocation target size).
     private const uint mLength; /// Components count.
 
-    private shared uint mFirstFree = 0;
+    private shared ulong mFirstFree = 0;
     private shared uint mAllocated = 0;
 }
 

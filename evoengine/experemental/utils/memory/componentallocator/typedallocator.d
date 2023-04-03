@@ -49,15 +49,16 @@ class ComponentAllocator(T)
     public size_t allocate()
     {
         import core.atomic;
+
         UnitPosition position;
         position.block = 0; // for position.block++ in end of this method.
 
-        while(true)
+        while (true)
         {
             IPoolAllocator!T block;
             spinLocker.lock();
             {
-                if(position.block < this.mBlocks.length)
+                if (position.block < this.mBlocks.length)
                 {
                     block = this.mBlocks[position.block].poolAllocator;
                 }
@@ -89,7 +90,6 @@ class ComponentAllocator(T)
             }
         }
         spinLocker.unlock();
-
 
         position.id = this.mBlocks[position.block].poolAllocator.allocate();
         assert(position.id != NoneIndex);
