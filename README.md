@@ -33,5 +33,3 @@ At the moment, the project is under development, and it is not recommended to us
 ## License
 
 The project is distributed under the MIT license. Detailed information can be found in the file `LICENSE`.
-
-A library for game development in the D programming language.
