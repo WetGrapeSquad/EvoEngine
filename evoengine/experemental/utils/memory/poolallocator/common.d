@@ -76,4 +76,23 @@ interface IPoolAllocator(T): Serializable
         public int opApply(scope int delegate(ref T component) dg);
     }
 }
+union ComponentIndex
+{
+    this(ulong index)
+    {
+        this.fullIndex = index;
+    }
 
+    this(uint operations, uint index)
+    {
+        this.operations = operations;
+        this.index = index;
+    }
+
+    struct
+    {
+        uint operations;
+        uint index;
+    }
+    ulong fullIndex;
+}

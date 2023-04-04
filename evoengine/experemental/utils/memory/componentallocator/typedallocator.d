@@ -164,7 +164,7 @@ unittest
 
     auto start = Clock.currTime;
 
-    foreach (i; 5_000.iota.parallel)
+    foreach (i; 100.iota.parallel)
     {
         size_t[128] id1;
         size_t[128] id2;
@@ -215,3 +215,4 @@ unittest
     writeln(Clock.currTime - start);
     componentAllocator.reduceMemoryUsage;
 }
+

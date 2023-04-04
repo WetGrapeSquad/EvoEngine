@@ -4,6 +4,7 @@ import evoengine.utils.memory.blockallocator;
 import dlib.container.array;
 import std.traits;
 import core.atomic;
+import core.internal.container.common;
 
 class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = BlockType)
     : IPoolAllocator!T
@@ -43,28 +44,28 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
     {
         while (true)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
 
-            if ((cast(uint) firstFree) == NoneIndex)
+            if (firstFree.index == NoneIndex)
             {
                 return NoneIndex;
             }
-            ulong nextFree = this.mArray[cast(uint) firstFree].mNextFree;
+            ComponentIndex nextFree;
+            nextFree.index = this.mArray[firstFree.index].mNextFree;
 
-            if ((cast(uint) nextFree) != NoneIndex)
+            if (nextFree.index != NoneIndex)
             {
-                nextFree = nextFree + (
-                    (cast(ulong) this.mArray[nextFree].mOperations.atomicLoad + 1) << 32);
+                nextFree.operations = this.mArray[nextFree.index].mOperations.atomicLoad + 1;
             }
 
-            if (cas(&this.mFirstFree, firstFree, nextFree))
+            if (cas(&this.mFirstFree, firstFree.fullIndex, nextFree.fullIndex))
             {
                 this.mAllocated.atomicFetchAdd(1);
-                this.mArray[cast(uint) firstFree].mOperations.atomicFetchAdd(1);
-                this.mArray[cast(uint) firstFree].mFree = false;
-                this.mArray[cast(uint) firstFree].component = T.init;
+                this.mArray[firstFree.index].mOperations.atomicFetchAdd(1);
+                this.mArray[firstFree.index].mFree = false;
+                this.mArray[firstFree.index].component = T.init;
 
-                return cast(uint) firstFree;
+                return firstFree.index;
             }
         }
     }
@@ -79,13 +80,17 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
         while (true)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
-            this.mArray[index].mNextFree = cast(uint) firstFree;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
+            this.mArray[index].mNextFree = firstFree.index;
 
-            ulong newFree = index + ((cast(ulong) this.mArray[index].mOperations.atomicLoad + 1) << 32);
-            if (cas(&this.mFirstFree, firstFree, newFree))
+            ComponentIndex newFree;
+            newFree.index = index;
+            newFree.operations = this.mArray[index].mOperations.atomicLoad + 1;
+
+            if (cas(&this.mFirstFree, firstFree.fullIndex, newFree.fullIndex))
             {
                 this.mArray[index].mOperations.atomicFetchAdd(1);
+                this.mArray[index].component.destroy!(false);
                 this.mAllocated.atomicFetchSub(1);
                 return;
             }
@@ -100,26 +105,28 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
         while (indexArray.length < count)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
 
-            if (firstFree == NoneIndex)
+            if (firstFree.index == NoneIndex)
             {
                 break;
             }
-            ulong nextFree = this.mArray[cast(uint) firstFree].mNextFree;
-            if ((cast(uint) nextFree) != NoneIndex)
+
+            ComponentIndex nextFree;
+            nextFree.index = this.mArray[nextFree.index].mNextFree;
+
+            if (nextFree.index != NoneIndex)
             {
-                nextFree = nextFree + (
-                    (cast(ulong) this.mArray[nextFree].mOperations.atomicLoad + 1) << 32);
+                nextFree.operations = this.mArray[nextFree.index].mOperations.atomicLoad + 1;
             }
 
-            if (cas(&this.mFirstFree, firstFree, nextFree))
+            if (cas(&this.mFirstFree, firstFree.fullIndex, nextFree.fullIndex))
             {
                 this.mAllocated.atomicFetchAdd(1);
-                this.mArray[cast(uint) firstFree].mOperations.atomicFetchAdd(1);
-                this.mArray[cast(uint) firstFree].mFree = false;
-                this.mArray[cast(uint) firstFree].component = T.init;
-                indexArray ~= cast(uint) firstFree;
+                this.mArray[firstFree.index].mOperations.atomicFetchAdd(1);
+                this.mArray[firstFree.index].mFree = false;
+                this.mArray[firstFree.index].component = T.init;
+                indexArray ~= firstFree.index;
             }
         }
         return indexArray;
@@ -136,17 +143,23 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
                 .to!string);
             this.mArray[deallocate[0]].mFree = true;
 
-            ulong firstFree = this.mFirstFree.atomicLoad;
-            this.mArray[deallocate[0]].mNextFree = cast(uint) firstFree;
-
-            ulong newFree = deallocate[0] + (
-                (cast(ulong) this.mArray[deallocate[0]].mOperations.atomicLoad + 1) << 32);
-
-            if (cas(&this.mFirstFree, firstFree, newFree))
+            while (true)
             {
-                this.mAllocated.atomicFetchSub(1);
-                this.mArray[deallocate[0]].mOperations.atomicFetchAdd(1);
-                return;
+                ComponentIndex firstFree = this.mFirstFree.atomicLoad;
+                this.mArray[deallocate[0]].mNextFree = firstFree.index;
+
+                ComponentIndex newFree;
+                newFree.index = deallocate[0];
+                newFree.operations = this.mArray[deallocate[0]].mOperations.atomicLoad + 1;
+
+                if (cas(&this.mFirstFree, firstFree.fullIndex, newFree.fullIndex))
+                {
+                    this.mArray[deallocate[0]].mOperations.atomicFetchAdd(1);
+                    this.mArray[deallocate[0]].component.destroy!(false);
+                    this.mAllocated.atomicFetchSub(1);
+                    deallocate = deallocate[1 .. $];
+                    break;
+                }
             }
         }
     }
@@ -215,7 +228,9 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
                 auto result = dg(element.component);
                 if (result)
+                {
                     return result;
+                }
             }
             return 0;
         }

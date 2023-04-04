@@ -8,68 +8,40 @@ import core.atomic;
 class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType = BlockType)
     : IPoolAllocator!(ubyte[])
 {
-    /*  
-    *   Structure of block element. Structure size multiple uint.sizeof.
-    *   mFree -> 0 byte
-    *   mOperations -> uint.sizeof byte
-    *   mNextFree -> uint.sizeof*2 byte
-    *   memory -> uint.sizeof*2 byte
-    *
-    *   struct Component
-    *   {
-    *       bool mFree;
-    *       shared uint mOperations;
-    *       union
-    *       {
-    *           uint mNextFree;
-    *           ubyte[size] memory;
-    *       }
-    *   }
-    */
+    struct Component
+    {
+        bool mFree = false;
+        shared uint mOperations = 0;
+        uint mNextFree;
+    }
 
-    this(blockAllocator allocator, uint size)
+    this(BlockAllocator allocator, uint size)
     {
         this.mAllocator = allocator;
-
         this.mBlock = this.mAllocator.allocate();
         this.mArray = cast(ubyte[]) this.mBlock.data;
 
-        this.mComponentSize = size;
-        this.mElementSize = shrink(cast(uint)(uint.sizeof * 3) + size, cast(uint) uint.sizeof);
-        this.mLength = cast(uint) mArray.length / this.mElementSize;
+        this.mComponentFullSize = cast(uint) Component.sizeof + size;
+        this.mDataSize = size;
+        this.mLength = cast(uint)(this.mArray.length / this.mComponentFullSize);
 
-        for (uint i = 0; i < this.mLength; i++)
+        foreach (i; 0 .. this.mLength - 1)
         {
-            this.getFreeFlag(i) = true;
-            this.getNextFree(i) = i + 1;
-            this.getOperations(i).atomicStore(0);
+            this.getComponent(i) = Component(false, 0, i + 1);
         }
-        this.getNextFree(this.mLength - 1) = NoneIndex;
+        this.getComponent(this.mLength - 1) = Component(false, 0, NoneIndex);
     }
 
-    final pragma(inline) private ref bool getFreeFlag(uint index)
+    pragma(inline) private ref Component getComponent(uint index)
     {
-        bool* freeFlag = cast(bool*)(&this.mArray[index * this.mElementSize]);
-        return *freeFlag;
-    }
-
-    final pragma(inline) private ref shared(uint) getOperations(uint index)
-    {
-        shared(uint)* component = cast(shared(uint)*)(
-            &this.mArray[index * this.mElementSize + uint.sizeof]);
+        Component* component = cast(Component*)&this.mArray[index * this.mComponentFullSize];
         return *component;
     }
 
-    final pragma(inline) private ubyte[] getComponent(uint index)
+    pragma(inline) private ubyte[] getData(uint index)
     {
-        ubyte* component = cast(ubyte*)(&this.mArray[index * this.mElementSize + uint.sizeof * 2]);
-        return component[0 .. this.mComponentSize];
-    }
-
-    final pragma(inline) private ref uint getNextFree(uint index)
-    {
-        uint* indexPointer = cast(uint*)(&this.mArray[index * this.mElementSize + uint.sizeof * 2]);
-        return *indexPointer;
+        ubyte* data = cast(ubyte*)&this.mArray[index * this.mComponentFullSize + Component.sizeof];
+        return data[0 .. this.mDataSize];
     }
 
     /// Allocate one element and get index.
@@ -77,27 +49,29 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     {
         while (true)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
 
-            if ((cast(uint) firstFree) == NoneIndex)
+            if (firstFree.index == NoneIndex)
             {
                 return NoneIndex;
             }
-            ulong nextFree = this.getNextFree(cast(uint) firstFree);
+            ComponentIndex nextFree;
+            nextFree.index = this.getComponent(firstFree.index).mNextFree;
 
-            if ((cast(uint) nextFree) != NoneIndex)
+            if (nextFree.index != NoneIndex)
             {
-                nextFree = nextFree + ((cast(ulong) this.getOperations(cast(uint) nextFree)
-                        .atomicLoad + 1) << 32);
+                nextFree.operations = this.getComponent(nextFree.index).mOperations.atomicLoad + 1;
             }
 
-            if (cas(&this.mFirstFree, firstFree, nextFree))
+            if (cas(&this.mFirstFree, firstFree.fullIndex, nextFree.fullIndex))
             {
                 this.mAllocated.atomicFetchAdd(1);
-                this.getOperations(cast(uint) firstFree).atomicFetchAdd(1);
-                this.getFreeFlag(cast(uint) firstFree) = false;
 
-                return cast(uint) firstFree;
+                Component* comp = &this.getComponent(firstFree.index);
+                comp.mOperations.atomicFetchAdd(1);
+                comp.mFree = false;
+
+                return firstFree.index;
             }
         }
     }
@@ -107,18 +81,23 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     {
         import std.conv : to;
 
-        assert(!this.getFreeFlag(index), "Double free detected " ~ index.to!string);
-        this.getFreeFlag(index) = true;
+        Component* toFree = &this.getComponent(index);
+
+        assert(!toFree.mFree, "Double free detected " ~ index.to!string);
+        toFree.mFree = true;
 
         while (true)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
-            this.getNextFree(index) = cast(uint) firstFree;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
+            toFree.mNextFree = firstFree.index;
 
-            ulong newFree = index + ((cast(ulong) this.getOperations(index).atomicLoad + 1) << 32);
-            if (cas(&this.mFirstFree, firstFree, newFree))
+            ComponentIndex newFree;
+            newFree.index = index;
+            newFree.operations = toFree.mOperations.atomicLoad + 1;
+
+            if (cas(&this.mFirstFree, firstFree.fullIndex, newFree.fullIndex))
             {
-                this.getOperations(index).atomicFetchAdd(1);
+                toFree.mOperations.atomicFetchAdd(1);
                 this.mAllocated.atomicFetchSub(1);
                 return;
             }
@@ -133,25 +112,28 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 
         while (indexArray.length < count)
         {
-            ulong firstFree = this.mFirstFree.atomicLoad;
+            ComponentIndex firstFree = this.mFirstFree.atomicLoad;
 
-            if (firstFree == NoneIndex)
+            if (firstFree.index == NoneIndex)
             {
                 break;
             }
-            ulong nextFree = this.getNextFree(cast(uint) firstFree);
-            if ((cast(uint) nextFree) != NoneIndex)
+            ComponentIndex nextFree;
+            nextFree.index = this.getComponent(firstFree.index).mNextFree;
+
+            if (nextFree.index != NoneIndex)
             {
-                nextFree = nextFree + ((cast(ulong) this.getOperations(cast(uint) nextFree)
-                        .atomicLoad + 1) << 32);
+                nextFree.operations = this.getComponent(nextFree.index).mOperations.atomicLoad + 1;
             }
 
-            if (cas(&this.mFirstFree, firstFree, nextFree))
+            if (cas(&this.mFirstFree, firstFree.fullIndex, nextFree.fullIndex))
             {
                 this.mAllocated.atomicFetchAdd(1);
-                this.getOperations(cast(uint) firstFree).atomicFetchAdd(1);
-                this.getFreeFlag(cast(uint) firstFree) = false;
-                indexArray ~= cast(uint) firstFree;
+                Component* comp = &this.getComponent(firstFree.index);
+                comp.mOperations.atomicFetchAdd(1);
+                comp.mFree = false;
+
+                indexArray ~= firstFree.index;
             }
         }
         return indexArray;
@@ -164,21 +146,29 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 
         while (deallocate.length != 0)
         {
-            assert(!this.getFreeFlag(deallocate[0]), "Double free detected " ~ deallocate[0]
-                .to!string);
-            this.getFreeFlag(deallocate[0]) = true;
+            import std.conv : to;
 
-            ulong firstFree = this.mFirstFree.atomicLoad;
-            this.getNextFree(deallocate[0]) = cast(uint) firstFree;
+            Component* toFree = &this.getComponent(deallocate[0]);
 
-            ulong newFree = deallocate[0] + ((cast(ulong) this.getOperations(deallocate[0])
-                .atomicLoad + 1) << 32);
+            assert(!toFree.mFree, "Double free detected " ~ deallocate[0].to!string);
+            toFree.mFree = true;
 
-            if (cas(&this.mFirstFree, firstFree, newFree))
+            while (true)
             {
-                this.mAllocated.atomicFetchSub(1);
-                this.getOperations(deallocate[0]).atomicFetchAdd(1);
-                return;
+                ComponentIndex firstFree = this.mFirstFree.atomicLoad;
+                toFree.mNextFree = firstFree.index;
+
+                ComponentIndex newFree;
+                newFree.index = deallocate[0];
+                newFree.operations = toFree.mOperations.atomicLoad + 1;
+
+                if (cas(&this.mFirstFree, firstFree.fullIndex, newFree.fullIndex))
+                {
+                    toFree.mOperations.atomicFetchAdd(1);
+                    this.mAllocated.atomicFetchSub(1);
+                    deallocate = deallocate[1 .. $];
+                    break;
+                }
             }
         }
     }
@@ -190,7 +180,7 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
     /// Return avaliable for allocation count of element.
     public uint avaliable()
     {
-        return this.mLength - this.mAllocated.atomicLoad;
+        return this.mLength - this.allocated;
     }
     /// Return count of occupied elements.
     public uint allocated()
@@ -200,22 +190,23 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 
     ubyte[] opIndex(uint index)
     {
-        assert(!this.getFreeFlag(index), "Try access to deallocated element");
-        return this.getComponent(index);
+        import std.conv : to;
+
+        assert(!this.getComponent(index).mFree, "Try access to deallocated element " ~ index
+                .to!string);
+        return this.getData(index);
     }
 
     public int opApply(scope int delegate(ubyte[] component) dg)
     {
-        foreach (uint index; 0 .. this.mLength)
+        foreach (index; 0 .. this.mLength)
         {
-            if (this.getFreeFlag(index))
+            if (this.getComponent(cast(uint) index).mFree)
             {
                 continue;
             }
 
-            ubyte[] component = this.getComponent(index);
-            auto result = dg(component);
-
+            auto result = dg(this.getData(cast(uint) index));
             if (result)
             {
                 return result;
@@ -234,8 +225,8 @@ class SizedPoolAllocator(alias blockAllocator = BlockAllocator, alias blockType 
 
     private ubyte[] mArray;
 
-    private const uint mElementSize; /// Structure shrink size.
-    private const uint mComponentSize; /// Component size(allocation target size).
+    private const uint mDataSize; /// Structure shrink size.
+    private const uint mComponentFullSize; /// Component size(allocation target size).
     private const uint mLength; /// Components count.
 
     private shared ulong mFirstFree = 0;
@@ -250,38 +241,79 @@ unittest
     import std.parallelism;
 
     BlockAllocator allocator = New!BlockAllocator;
-    IPoolAllocator!(ubyte[]) sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator, 16);
 
     scope (exit)
     {
-        Delete(sizedPoolAllocator);
         Delete(allocator);
     }
 
-    immutable(ubyte[]) templateData = ubyte(16).iota.array;
-    foreach (i; 100.iota.parallel)
+    immutable(ubyte[16]) templateData = ubyte(16).iota.array;
+
+    foreach (i; 0 .. 1_000)
     {
-        import std.array : array;
-        import std.range : iota;
-
-        uint[] elements;
-        elements.length = sizedPoolAllocator.avaliable / 100;
-
-        foreach (ref element; elements)
+        SizedPoolAllocator!() sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator, 16);
+        scope (exit)
         {
-            element = sizedPoolAllocator.allocate;
-            sizedPoolAllocator[element][0 .. $] = templateData[0 .. $];
-        }
-        foreach (ref element; elements[0 .. $ / 2])
-        {
-            assert(sizedPoolAllocator[element][0 .. $] == templateData[0 .. $]);
-            sizedPoolAllocator.deallocate(element);
+            Delete(sizedPoolAllocator);
         }
 
-        foreach (ref element; elements[$ / 2 .. $])
+        foreach (i; 100.iota.parallel)
         {
-            assert(sizedPoolAllocator[element][0 .. $] == templateData[0 .. $]);
-            sizedPoolAllocator.deallocate(element);
+            import std.array : array;
+            import std.range : iota;
+
+            uint[] elements;
+            elements.length = sizedPoolAllocator.avaliable / 100;
+
+            foreach (ref element; elements)
+            {
+                element = sizedPoolAllocator.allocate;
+                sizedPoolAllocator[element][0 .. $] = templateData[0 .. $];
+            }
+            foreach (ref element; elements[0 .. $ / 2])
+            {
+                assert(sizedPoolAllocator[element][0 .. $] == templateData[0 .. $]);
+                sizedPoolAllocator.deallocate(element);
+            }
+
+            foreach (ref element; elements[$ / 2 .. $])
+            {
+                assert(sizedPoolAllocator[element][0 .. $] == templateData[0 .. $]);
+                sizedPoolAllocator.deallocate(element);
+            }
         }
     }
 }
+
+/*
+Unittest failed:
+core.exception.ArrayIndexError@evoengine/experemental/utils/memory/poolallocator/sizedallocator.d(59): index [1412963332] is out of bounds for array of length 131072
+----------------
+??:? onArrayIndexError [0x7efe5e36a36d]
+??:? _d_arraybounds_index [0x7efe5e36a98d]
+evoengine/experemental/utils/memory/poolallocator/sizedallocator.d:58 [0x55fc4ee41667]
+evoengine/experemental/utils/memory/poolallocator/sizedallocator.d:90 [0x55fc4ee417ad]
+evoengine/experemental/utils/memory/poolallocator/sizedallocator.d:272 [0x55fc4ee410bb]
+/usr/include/dlang/ldc/std/parallelism.d-mixin-4093:4139 [0x55fc4ee43ade]
+??:? void std.parallelism.TaskPool.executeWorkLoop() [0x7efe5e07804f]
+??:? thread_entryPoint [0x7efe5e392509]
+??:? [0x7efe5db96bb4]
+??:? [0x7efe5dc18d8f]
+ ✓ .utils.containers.flagarray FlagArray
+ ✓ .utils.containers.binary BinaryBuffer
+ ✓ .utils.memory.classregistrator ClassRegistrator
+ ✓ .ecs.component.componentarray ECS/ComponentArray
+ ✓ .utils.memory.blockallocator BlockAllocator
+5 ms, 822 μs, and 9 hnsecs
+ ✓ .sizedcomponentallocator SizedComponentAllocator
+ ✓ .typedcomponentallocator TypedComponentAllocator
+ ✓ .sizedAllocator Experemental/SizedComponentAllocator
+ ✓ .utils.memory.poolallocator PoolAllocator
+ ✓ .poolallocator.typedallocator Experemental/PoolAllocator
+ ✓ .utils.ecs.component.component ECS/Component
+ ✓ evoengine.utils.ecs.entity ECS/EntityManager
+ ✓ .utils.memory.mallocator MallocAllocator
+4 secs, 464 ms, 8 μs, and 9 hnsecs
+ ✓ .typedallocator Experemental/TypedComponentAllocator
+Aborting from core/sync/mutex.d(149) Error: pthread_mutex_destroy failed.
+*/
