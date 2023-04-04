@@ -6,6 +6,7 @@ dlib.core.memory,
 dlib.container.array,
 dlib.container.dict;
 import core.internal.gc.impl.conservative.gc;
+import std.parallelism;
 
 struct ComponentItem(T)
 {
@@ -158,6 +159,7 @@ class SizedComponentArray : IComponentArray
 @("ECS/ComponentArray")
 unittest
 {
+    import std.range;
     struct TestStruct
     {
         int i = 0;
@@ -172,11 +174,11 @@ unittest
         Delete(blockAllocator);
     }
 
-    size_t entity = 5; // in this test this number can be any constant.
-    size_t[] components = new size_t[1_000];
 
-    foreach (j; 0 .. 10)
+    foreach (j; 100.iota.parallel)
     {
+        size_t entity = 5; // in this test this number can be any constant.
+        size_t[] components = new size_t[1_000];
         foreach (ref component; components)
         {
             component = componentArray.create(entity);

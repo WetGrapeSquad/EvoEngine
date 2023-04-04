@@ -4,6 +4,7 @@ import dlib.container.array;
 import std.algorithm.sorting;
 import std.algorithm.searching;
 import std.algorithm.mutation;
+import core.internal.spinlock;
 import std.range : assumeSorted;
 
 private enum NoneIndex = -1;
@@ -130,14 +131,20 @@ struct ClassRegistrator(BasicClass)
         this.mFirstFree = objectId;
     }
 
-    public void unregister(size_t objectId)
+    public void unregister(bool dlibDelete = true)(size_t objectId)
     {
         size_t nameId = this.mObjects[objectId].mNameId;
+        
+        static if(dlibDelete)
+        {
+            import dlib.core.memory;
+            Delete(this.mObjects[objectId].mObject);
+        }
 
         this.unregister(objectId, nameId);
     }
 
-    public void unregister(string name)
+    public void unregister(bool dlibDelete = true)(string name)
     {
         size_t nameId = this.mObjectsName.length -
             assumeSorted(this.mObjectsName.data)
@@ -146,6 +153,12 @@ struct ClassRegistrator(BasicClass)
         assert(nameId < this.mObjectsName.length, name ~ " isn't exist.\n");
 
         size_t objectId = this.mObjectsName[nameId].mIndex;
+        
+        static if(dlibDelete)
+        {
+            import dlib.core.memory;
+            Delete(this.mObjects[objectId].mObject);
+        }
 
         this.unregister(objectId, nameId);
     }
@@ -272,8 +285,8 @@ unittest
     test.register("test3", new Test);
     test.register("test4", new Test);
 
-    test.unregister("test1");
-    test.unregister("test2");
-    test.unregister("test3");
-    test.unregister("test4");
+    test.unregister!(false)("test1");
+    test.unregister!(false)("test2");
+    test.unregister!(false)("test3");
+    test.unregister!(false)("test4");
 }

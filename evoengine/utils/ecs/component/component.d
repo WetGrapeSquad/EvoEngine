@@ -40,21 +40,16 @@ class ComponentManager
 
     void unregister(T)()
     {
-        size_t id = this.mComponentArrays.getId(T.stringof);
-        Delete(this.mComponentArrays[id]);
-        this.mComponentArrays.unregister(id);
+        this.mComponentArrays.unregister(T.stringof);
     }
 
     void unregister(string name)
     {
-        size_t id = this.mComponentArrays.getId(name);
-        Delete(this.mComponentArrays[id]);
-        this.mComponentArrays.unregister(id);
+        this.mComponentArrays.unregister(name);
     }
 
     void unregister(size_t componentType)
     {
-        Delete(this.mComponentArrays[componentType]);
         this.mComponentArrays.unregister(componentType);
     }
 
@@ -105,7 +100,7 @@ class ComponentManager
 @("ECS/Component")
 unittest
 {
-    import std.stdio, std.datetime;
+    import std.range, std.parallelism;
 
     struct Test
     {
@@ -122,12 +117,13 @@ unittest
 
     size_t componentType = componentManager.register!Test;
 
-    size_t entity = 5;
-    size_t[] components;
-    components.length = 1024;
     
-    foreach (i; 0 .. 100)
+    foreach (i; 100.iota.parallel)
     {
+        size_t entity = 5;
+        size_t[] components;
+        components.length = 1024;
+
         foreach (ref component; components)
         {
             component = componentManager.create(componentType, entity);
