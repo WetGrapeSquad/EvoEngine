@@ -106,15 +106,13 @@ unittest
 {
     BlockAllocator blockAllocator = New!BlockAllocator;
     EntityManager entityManager = New!(EntityManager)(blockAllocator);
-    
+
     scope (exit)
     {
         Delete(entityManager);
         Delete(blockAllocator);
     }
-    import std.datetime, std.stdio;
 
-    auto start = Clock.currTime;
     foreach (j; 0 .. 10)
     {
         size_t[] entities = new size_t[10_000];

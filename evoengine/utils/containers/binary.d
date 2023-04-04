@@ -252,9 +252,7 @@ struct BinaryBuffer(Order order = Order.FILO)
 
 @("BinaryBuffer")
 unittest
-{
-    import std.stdio;
-    
+{    
     static foreach(order; [Order.FIFO, Order.FILO])
     {
         {

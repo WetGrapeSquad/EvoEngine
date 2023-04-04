@@ -219,8 +219,6 @@ unittest
         }
         foreach (ref id; id1)
         {
-            import std.stdio;
-
             assert(componentAllocator[id][0 .. 24] == testData[0 .. 24], "Assignment and/or getting value by id is't working!");
         }
     }

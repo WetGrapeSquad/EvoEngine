@@ -253,11 +253,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 @("Experemental/PoolAllocator")
 unittest
 {
-    import dlib.core.memory;
-    import std.range;
-    import std.parallelism;
-    import std.stdio;
-    import std.datetime;
+    import dlib.core.memory, std.range, std.parallelism;
 
     BlockAllocator allocator = New!BlockAllocator;
     IPoolAllocator!int poolAllocator = New!(PoolAllocator!int)(allocator);

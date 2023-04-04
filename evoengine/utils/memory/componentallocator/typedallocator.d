@@ -159,9 +159,6 @@ unittest
         Delete(componentAllocator);
         Delete(blockAllocator);
     }
-    import std.datetime, std.stdio;
-
-    auto start = Clock.currTime;
 
     foreach (i; 100.iota.parallel)
     {
@@ -211,7 +208,5 @@ unittest
             componentAllocator[id] = 5;
         }
     }
-    writeln(Clock.currTime - start);
-    componentAllocator.reduceMemoryUsage;
 }
 
