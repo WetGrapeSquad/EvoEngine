@@ -1,19 +1,16 @@
-module evoengine.utils.memory.componentallocator.common;
-
+module evoengine.utils.memory.componentallocator.common;;
 public import evoengine.utils.memory.blockallocator;
 public import evoengine.utils.memory.poolallocator;
 public import dlib.core.memory;
 public import dlib.container.array;
 
-
-/// UnitPosition struct what contain unit position by block and index
+/// In current time not support 32-bits systems.
 struct UnitPosition
 {
     /// Convert inner index to UnitPosition;
-    public this(size_t index)
+    public this(size_t index, size_t sizing)
     {
-        this.id = cast(uint) index;
-        this.block = cast(uint)(index >> (uint.sizeof * 8));
+        this.fullIndex = index;
     }
     /// Construct with inner block and id.
     public this(uint block, uint id)
@@ -21,35 +18,25 @@ struct UnitPosition
         this.id = id;
         this.block = block;
     }
+
     /// Cmp this and position
-    public int opCmp(ref UnitPosition position)
+    public long opCmp(ref UnitPosition position)
     {
-        static if (size_t.sizeof == UnitPosition.sizeof)
-        {
-            long cmp = cast(long) this.opCast - cast(long) position.opCast;
-            return cast(int) cmp;
-        }
-        else
-        {
-            uint block = this.block - position.block;
-            if (block != 0)
-            {
-                return block;
-            }
-            uint id = this.id - position.id;
-            if (id != 0)
-            {
-                return id;
-            }
-            return 0;
-        }
-    }
-    /// Conver this to inner index.
-    public size_t opCast()
-    {
-        return ((cast(size_t) block) << (uint.sizeof * 8)) + id;
+        long compare = this.block - position.block;
+
+        if(compare == 0)
+            compare = this.id - position.id;
+
+        return compare;
     }
 
-    public uint block;
-    public uint id;
+    union
+    {
+        size_t fullIndex;
+        struct 
+        {
+            uint block;
+            uint id;
+        }
+    }
 }

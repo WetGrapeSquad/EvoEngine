@@ -1,5 +1,5 @@
-module evoengine.experemental.utils.memory.poolallocator.typedallocator;
-import evoengine.experemental.utils.memory.poolallocator.common;
+module evoengine.utils.memory.poolallocator.typedallocator;
+import evoengine.utils.memory.poolallocator.common;
 import evoengine.utils.memory.blockallocator;
 import dlib.container.array;
 import std.traits;

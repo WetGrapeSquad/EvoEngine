@@ -106,10 +106,11 @@ unittest
 {
     BlockAllocator blockAllocator = New!BlockAllocator;
     EntityManager entityManager = New!(EntityManager)(blockAllocator);
+    
     scope (exit)
     {
-        Delete(blockAllocator);
         Delete(entityManager);
+        Delete(blockAllocator);
     }
     import std.datetime, std.stdio;
 

@@ -7,6 +7,6 @@
 * (two for support scripting languages).
 */
 module evoengine.experemental.utils.memory.poolallocator;
-public import evoengine.experemental.utils.memory.poolallocator.common;
-public import evoengine.experemental.utils.memory.poolallocator.typedallocator;
-public import evoengine.experemental.utils.memory.poolallocator.sizedallocator;
+public import evoengine.utils.memory.poolallocator.common;
+public import evoengine.utils.memory.poolallocator.typedallocator;
+public import evoengine.utils.memory.poolallocator.sizedallocator;

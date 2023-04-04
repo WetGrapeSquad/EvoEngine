@@ -168,8 +168,8 @@ unittest
 
     scope (exit)
     {
-        Delete(blockAllocator);
         Delete(componentArray);
+        Delete(blockAllocator);
     }
 
     size_t entity = 5; // in this test this number can be any constant.

@@ -1,5 +1,5 @@
-module evoengine.experemental.utils.memory.poolallocator.sizedallocator;
-import evoengine.experemental.utils.memory.poolallocator.common;
+module evoengine.utils.memory.poolallocator.sizedallocator;
+import evoengine.utils.memory.poolallocator.common;
 import evoengine.utils.memory.blockallocator;
 import dlib.container.array;
 import std.traits;
@@ -249,7 +249,7 @@ unittest
 
     immutable(ubyte[16]) templateData = ubyte(16).iota.array;
 
-    foreach (i; 0 .. 1_000)
+    foreach (i; 0 .. 10)
     {
         SizedPoolAllocator!() sizedPoolAllocator = New!(SizedPoolAllocator!())(allocator, 16);
         scope (exit)

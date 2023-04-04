@@ -1,4 +1,4 @@
-module evoengine.experemental.utils.memory.poolallocator.common;
+module evoengine.utils.memory.poolallocator.common;
 import evoengine.utils.containers.binary;
 import dlib.container.array;
 import std.traits;

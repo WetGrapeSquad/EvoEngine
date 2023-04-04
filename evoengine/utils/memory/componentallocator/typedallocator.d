@@ -1,29 +1,28 @@
-module evoengine.experemental.utils.memory.componentallocator.sizedAllocator;
-import evoengine.experemental.utils.memory.componentallocator.common;
+module evoengine.utils.memory.componentallocator.typedallocator;
+import evoengine.utils.memory.componentallocator.common;
 import core.internal.spinlock;
 
-class SizedComponentAllocator
+class ComponentAllocator(T)
 {
     private struct ComponentsBlock
     {
-        private SizedPoolAllocator!() sizedAllocator;
+        private IPoolAllocator!T poolAllocator;
     }
 
     /// Default constructor. BlockAllocator needed for allocate big blocks of memory
-    public this(BlockAllocator blockAllocator, uint size)
+    public this(BlockAllocator blockAllocator)
     {
         debug assert(blockAllocator !is null, "Block allocator is null");
         this.mBlockAllocator = blockAllocator;
         this.spinLocker = SpinLock(SpinLock.Contention.brief);
-        this.mSize = size;
     }
 
     /// Foreach all components
-    public int opApply(scope int delegate(ubyte[] component) dg) /// WARNING: FOREACH MAY CALLS FOR CLEAR COMPONENT.
+    public int opApply(scope int delegate(ref T component) dg) /// WARNING: FOREACH MAY CALLS FOR CLEAR COMPONENT.
     {
         foreach (ref ComponentsBlock block; this.mBlocks)
         {
-            auto result = block.sizedAllocator.opApply(dg);
+            auto result = block.poolAllocator.opApply(dg);
             if (result)
             {
                 return result;
@@ -56,12 +55,12 @@ class SizedComponentAllocator
 
         while (true)
         {
-            SizedPoolAllocator!() block;
+            IPoolAllocator!T block;
             spinLocker.lock();
             {
                 if (position.block < this.mBlocks.length)
                 {
-                    block = this.mBlocks[position.block].sizedAllocator;
+                    block = this.mBlocks[position.block].poolAllocator;
                 }
                 else
                 {
@@ -86,13 +85,13 @@ class SizedComponentAllocator
             while (this.mBlocks.length <= position.block)
             {
                 ComponentsBlock block;
-                block.sizedAllocator = New!(SizedPoolAllocator!())(this.mBlockAllocator, this.mSize);
+                block.poolAllocator = New!(PoolAllocator!T)(this.mBlockAllocator);
                 this.mBlocks ~= block;
             }
         }
         spinLocker.unlock();
 
-        position.id = this.mBlocks[position.block].sizedAllocator.allocate();
+        position.id = this.mBlocks[position.block].poolAllocator.allocate();
         assert(position.id != NoneIndex);
         return this.unitPositionToId(position);
     }
@@ -104,19 +103,19 @@ class SizedComponentAllocator
         position.fullIndex = id;
         assert(position.block < this.mBlocks.length, "Id not created by ComponentAllocator");
 
-        this.mBlocks[position.block].sizedAllocator.deallocate(position.id);
+        this.mBlocks[position.block].poolAllocator.deallocate(position.id);
     }
 
     public void reduceMemoryUsage()
     {
-        if (this.mBlocks[this.mBlocks.length - 1].sizedAllocator.allocated == 0)
+        if (this.mBlocks[this.mBlocks.length - 1].poolAllocator.allocated == 0)
         {
             spinLocker.lock();
 
             {
-                while (this.mBlocks.length > 1 && this.mBlocks[this.mBlocks.length - 2].sizedAllocator.allocated == 0)
+                while (this.mBlocks.length > 1 && this.mBlocks[this.mBlocks.length - 2].poolAllocator.allocated == 0)
                 {
-                    Delete(this.mBlocks[this.mBlocks.length - 1].sizedAllocator);
+                    Delete(this.mBlocks[this.mBlocks.length - 1].poolAllocator);
                     this.mBlocks.removeBack(1);
                 }
             }
@@ -129,42 +128,42 @@ class SizedComponentAllocator
     {
         foreach (ref ComponentsBlock block; this.mBlocks)
         {
-            Delete(block.sizedAllocator);
+            Delete(block.poolAllocator);
         }
     }
 
     /// Get for reference of component by id
-    public ubyte[] opIndex(size_t id)
+    public ref T opIndex(size_t id)
     {
         UnitPosition position = this.idToUnitPosition(id);
-        return this.mBlocks[position.block].sizedAllocator[position.id];
+        return this.mBlocks[position.block].poolAllocator[position.id];
     }
 
     private BlockAllocator mBlockAllocator;
     private Array!ComponentsBlock mBlocks;
     private SpinLock spinLocker;
-
-    private const uint mSize;
 }
 
-@("Experemental/SizedComponentAllocator")
+@("Experemental/TypedComponentAllocator")
 unittest
 {
-    import std.range, std.array, std.algorithm, dlib.core.memory : New, Delete;
+    import std.algorithm, dlib.core.memory : New, Delete;
+    import std.parallelism, std.range;
     import evoengine.utils.memory.blockallocator;
 
     BlockAllocator blockAllocator = New!BlockAllocator;
-    SizedComponentAllocator componentAllocator = New!(SizedComponentAllocator)(blockAllocator, 24);
+    ComponentAllocator!int componentAllocator = New!(ComponentAllocator!int)(blockAllocator);
 
     scope (exit)
     {
         Delete(componentAllocator);
         Delete(blockAllocator);
     }
+    import std.datetime, std.stdio;
 
-    size_t lastId;
+    auto start = Clock.currTime;
 
-    foreach (i; 0 .. 10)
+    foreach (i; 100.iota.parallel)
     {
         size_t[128] id1;
         size_t[128] id2;
@@ -202,26 +201,17 @@ unittest
         {
             componentAllocator.deallocate(id);
         }
-    }
 
-    ubyte[] testData = (ubyte(24)).iota.array[0 .. 24];
-
-    foreach (i; 0 .. 10)
-    {
-        size_t[128] id1;
         foreach (ref id; id1)
         {
             id = componentAllocator.allocate();
         }
         foreach (ref id; id1)
         {
-            componentAllocator[id][0 .. 24] = testData[0 .. 24];
-        }
-        foreach (ref id; id1)
-        {
-            import std.stdio;
-
-            assert(componentAllocator[id][0 .. 24] == testData[0 .. 24], "Assignment and/or getting value by id is't working!");
+            componentAllocator[id] = 5;
         }
     }
+    writeln(Clock.currTime - start);
+    componentAllocator.reduceMemoryUsage;
 }
+
