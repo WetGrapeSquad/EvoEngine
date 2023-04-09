@@ -1,17 +1,6 @@
-/**
-* Implementation Component classes for ECS.
-*
-* Description:
-* This module contain classes for allocate and deallocate components for
-* enttities in ECS. ComponentArray isn't thread-safty and needed in thread synchronizations.
-* ECS is built so that it works as a separate thread - synchronizations using in communicating 
-* with him and communication with the systems inside.
-*
-*/
-
 module evoengine.utils.ecs.component.component;
 private import evoengine.utils.ecs.component.componentarray,
-evoengine.utils.memory.classregistrator;
+evoengine.utils.containers.classregistrator;
 
 import evoengine.utils.memory.blockallocator,
 dlib.core.memory,
@@ -134,8 +123,3 @@ unittest
         }
     }
 }
-/**
-* Copyright: WetGrape 2023.
-* License: MIT.
-* Authors: Gedert Korney
-*/

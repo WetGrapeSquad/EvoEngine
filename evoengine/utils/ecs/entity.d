@@ -3,32 +3,56 @@ public import evoengine.utils.ecs.common;
 import evoengine.utils.memory.componentallocator,
 evoengine.utils.memory.blockallocator,
 dlib.core.memory,
-dlib.container.array;
+dlib.container.array,
+core.internal.spinlock;
 
 class EntityManager
 {
     struct EntityData
     {
-
         bool isRegistered(ComponentTypeId componentType)
         {
+            spinLock.lock();
+            scope(exit)
+            {
+                spinLock.unlock();
+            }
+            
             return mComponentFlags[componentType];
         }
 
         size_t opIndex(ComponentTypeId componentType)
         {
+            spinLock.lock();
+            scope(exit)
+            {
+                spinLock.unlock();
+            }
+
             debug assert(mComponentFlags[componentType]);
             return this.mEntityArray[componentType];
         }
 
         void changeComponentId(ComponentTypeId componentType, ComponentId componentId)
         {
+            spinLock.lock();
+            scope(exit)
+            {
+                spinLock.unlock();
+            }
+
             debug assert(mComponentFlags[componentType]);
             this.mEntityArray[componentType] = componentId;
         }
 
         void registrateComponent(ComponentTypeId componentType, ComponentId componentId)
         {
+            spinLock.lock();
+            scope(exit)
+            {
+                spinLock.unlock();
+            }
+
             debug assert(!mComponentFlags[componentType]);
 
             this.mComponentFlags[componentType] = true;
@@ -43,6 +67,12 @@ class EntityManager
 
         void unregistrateComponent(ComponentTypeId componentType, ComponentId componentId)
         {
+            spinLock.lock();
+            scope(exit)
+            {
+                spinLock.unlock();
+            }
+
             debug assert(mComponentFlags[componentType]);
 
             this.mComponentFlags[componentType] = false;
@@ -54,6 +84,7 @@ class EntityManager
             }
         }
 
+        SpinLock spinLock = SpinLock(SpinLock.Contention.brief);
         ComponentFlags mComponentFlags;
         Array!ComponentTypeId mEntityArray;
     }

@@ -50,6 +50,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
             {
                 return NoneIndex;
             }
+            
             ComponentIndex nextFree;
             nextFree.index = this.mArray[firstFree.index].mNextFree;
 
@@ -60,6 +61,7 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
             if (cas(&this.mFirstFree, firstFree.fullIndex, nextFree.fullIndex))
             {
+                assert(this.mArray[firstFree.index].mFree == true, "internal error");
                 this.mAllocated.atomicFetchAdd(1);
                 this.mArray[firstFree.index].mOperations.atomicFetchAdd(1);
                 this.mArray[firstFree.index].mFree = false;
@@ -246,8 +248,8 @@ class PoolAllocator(T, alias blockAllocator = BlockAllocator, alias blockType = 
 
     private Component[] mArray;
 
-    private shared ulong mFirstFree = 0;
-    private shared uint mAllocated = 0;
+    private shared(ulong) mFirstFree = 0;
+    private shared(uint)  mAllocated = 0;
 }
 
 @("Experemental/PoolAllocator")
