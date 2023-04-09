@@ -1,4 +1,5 @@
 module evoengine.utils.containers.redGreenRange;
+
 /** 
 * The task of this data structures is to effectively color any 
 * limited range in red or green, as well as to give quick answers 
@@ -159,6 +160,7 @@ struct RedGreenRange
                 Range(unit + 1, this.mRanges[range.id].end, colorRange)
             ];
         }
+
         this.mRanges = this.mRanges[0 .. range.id] ~ ranges ~ this.mRanges[range.id + 1 .. $];
     }
 
@@ -223,6 +225,8 @@ struct RedGreenRange
             checkLeft = false;
             mod++;
         }
+
+        this.mRanges = this.mRanges[0 .. rangeId.id] ~ ranges ~ this.mRanges[rangeId.id + 1 .. $];
 
         if (checkLeft)
         {
@@ -310,6 +314,7 @@ struct RedGreenRange
 unittest
 {
     import std.stdio;
+
     RedGreenRange ranges = Range(0, 100);
 
     ranges.consoleDump();
@@ -317,11 +322,19 @@ unittest
     foreach (i; 0 .. 20)
     {
         ranges.paint(5 * i, RangeColor.Green);
+        if (i != 0 && (4 * i) % 5 != 0)
+        {
+            ranges.paint(4 * i, RangeColor.Green);
+        }
         ranges.consoleDump();
     }
     foreach (i; 0 .. 20)
     {
         ranges.paint(5 * i, RangeColor.Red);
+        if (i != 0 && (4 * i) % 5 != 0)
+        {
+            ranges.paint(4 * i, RangeColor.Red);
+        }
         ranges.consoleDump();
     }
     writeln("Ranges count:", ranges.rangesCount);

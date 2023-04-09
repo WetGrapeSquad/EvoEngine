@@ -31,8 +31,7 @@
 	"dependencies": {
 		"dlib": "~>1.1.0",
 		"gogga": "~>2.1.16",
-		"grimoire": "~>0.8.0",
-		"silly": "~>1.1.1"
+		"grimoire": "~>0.8.0"
 	},
 	"description": "A simple engine on D",
 	"importPaths": [
