@@ -9,7 +9,7 @@ struct BlockType
     public void[] data;
 }
 
-class BlockAllocator
+shared class BlockAllocator
 {
     private enum BlockSize = 128 * 1024;
     private enum NoneBlock = -1;
@@ -19,43 +19,49 @@ class BlockAllocator
 
     public BlockType allocate()
     {
-        BlockType block;
-
-        if (this.mFreeBlock == NoneBlock)
+        synchronized(this)
         {
-            BlockType newBlock;
-            newBlock.data = Allocator.allocate!void(BlockSize);
-            newBlock.id = NoneBlock;
+            BlockType block;
 
-            block.id = this.mBlocks.length;
-            block.data = newBlock.data;
+            if (this.mFreeBlock == NoneBlock)
+            {
+                BlockType newBlock;
+                newBlock.data = Allocator.allocate!void(BlockSize);
+                newBlock.id = NoneBlock;
 
-            this.mBlocks ~= newBlock;
+                block.id = (cast(Array!BlockType)this.mBlocks).length;
+                block.data = newBlock.data;
+
+                (cast(Array!BlockType)this.mBlocks) ~= newBlock;
+            }
+            else
+            {
+                size_t freeBlock = this.mFreeBlock;
+                this.mFreeBlock = (cast(Array!BlockType)this.mBlocks)[freeBlock].id;
+
+                block.id = freeBlock;
+                block.data = (cast(Array!BlockType)this.mBlocks)[freeBlock].data;
+            }
+
+            return block;
         }
-        else
-        {
-            size_t freeBlock = this.mFreeBlock;
-            this.mFreeBlock = this.mBlocks[freeBlock].id;
-
-            block.id = freeBlock;
-            block.data = this.mBlocks[freeBlock].data;
-        }
-
-        return block;
     }
 
     public void deallocate(const BlockType block)
     {
-        BlockType tmp = this.mBlocks[block.id];
-        tmp.id = this.mFreeBlock;
-        this.mBlocks[block.id] = tmp;
+        synchronized(this)
+        {
+            BlockType tmp = (cast(Array!BlockType)this.mBlocks)[block.id];
+            tmp.id = this.mFreeBlock;
+            (cast(Array!BlockType)this.mBlocks)[block.id] = tmp;
 
-        this.mFreeBlock = block.id;
+            this.mFreeBlock = block.id;
+        }
     }
 
     size_t blocksCount() pure
     {
-        return this.mBlocks.length;
+        return (cast(Array!BlockType)this.mBlocks).length;
     }
 
     size_t allocatedMemory() pure
@@ -70,25 +76,28 @@ class BlockAllocator
 
     ~this()
     {
-        import evoengine.utils.memory.mallocator;
-
-        debug
+        synchronized(this)
         {
-            size_t freeCount;
-            for (size_t index = this.mFreeBlock; index != NoneBlock; index = this.mBlocks[index].id)
-            {
-                freeCount++;
-            }
-            if (freeCount != this.mBlocks.length())
-            {
-                import evoengine.utils.logging;
+            import evoengine.utils.memory.mallocator;
 
-                globalLogger.warn("Leaks Detected!", freeCount, this.mBlocks.length);
+            debug
+            {
+                size_t freeCount;
+                for (size_t index = this.mFreeBlock; index != NoneBlock; index = (cast(Array!BlockType)this.mBlocks)[index].id)
+                {
+                    freeCount++;
+                }
+                if (freeCount != (cast(Array!BlockType)this.mBlocks).length())
+                {
+                    import evoengine.utils.logging;
+
+                    globalLogger.warn("Leaks Detected!", freeCount, (cast(Array!BlockType)this.mBlocks).length);
+                }
             }
-        }
-        foreach (block; this.mBlocks)
-        {
-            Allocator.deallocate(block.data);
+            foreach (block; (cast(Array!BlockType)this.mBlocks))
+            {
+                Allocator.deallocate(block.data);
+            }
         }
     }
 
