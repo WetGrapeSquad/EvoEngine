@@ -1,4 +1,4 @@
-module evoengine.utils.memory.classregistrator;
+module evoengine.utils.containers.classregistrator;
 
 import dlib.container.array;
 import std.algorithm.sorting;
@@ -274,19 +274,20 @@ struct ClassRegistrator(BasicClass)
 @("ClassRegistrator")
 unittest
 {
+    import dlib.core.memory;
     class Test
     {
 
     }
 
     ClassRegistrator!Object test;
-    test.register("test1", new Test);
-    test.register("test2", new Test);
-    test.register("test3", new Test);
-    test.register("test4", new Test);
+    test.register("test1", New!Test);
+    test.register("test2", New!Test);
+    test.register("test3", New!Test);
+    test.register("test4", New!Test);
 
-    test.unregister!(false)("test1");
-    test.unregister!(false)("test2");
-    test.unregister!(false)("test3");
-    test.unregister!(false)("test4");
+    test.unregister!(true)("test1");
+    test.unregister!(true)("test2");
+    test.unregister!(true)("test3");
+    test.unregister!(true)("test4");
 }
