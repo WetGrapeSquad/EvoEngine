@@ -5,3 +5,4 @@ docs
 multipleTestRuns.sh
 callgrind_out
 callgrind_out.demangled
+tutorial/
