@@ -2,7 +2,7 @@ module evoengine.utils.memory.componentallocator.typedallocator;
 import evoengine.utils.memory.componentallocator.common;
 import core.internal.spinlock;
 
-class ComponentAllocator(T)
+shared class ComponentAllocator(T)
 {
     private struct ComponentsBlock
     {
@@ -20,7 +20,7 @@ class ComponentAllocator(T)
     /// Foreach all components
     public int opApply(scope int delegate(ref T component) dg) /// WARNING: FOREACH MAY CALLS FOR CLEAR COMPONENT.
     {
-        foreach (ref ComponentsBlock block; this.mBlocks)
+        foreach (ref ComponentsBlock block; cast(Array!ComponentsBlock) this.mBlocks)
         {
             auto result = block.poolAllocator.opApply(dg);
             if (result)
@@ -58,9 +58,10 @@ class ComponentAllocator(T)
             IPoolAllocator!T block;
             spinLocker.lock();
             {
-                if (position.block < this.mBlocks.length)
+                if (position.block < (cast(Array!ComponentsBlock) this.mBlocks).length)
                 {
-                    block = this.mBlocks[position.block].poolAllocator;
+                    block = (cast(Array!ComponentsBlock) this.mBlocks)[position.block]
+                        .poolAllocator;
                 }
                 else
                 {
@@ -82,16 +83,17 @@ class ComponentAllocator(T)
 
         spinLocker.lock();
         {
-            while (this.mBlocks.length <= position.block)
+            while ((cast(Array!ComponentsBlock) this.mBlocks).length <= position.block)
             {
                 ComponentsBlock block;
                 block.poolAllocator = New!(PoolAllocator!T)(this.mBlockAllocator);
-                this.mBlocks ~= block;
+                (cast(Array!ComponentsBlock) this.mBlocks) ~= block;
             }
         }
         spinLocker.unlock();
 
-        position.id = this.mBlocks[position.block].poolAllocator.allocate();
+        position.id = (cast(
+                Array!ComponentsBlock) this.mBlocks)[position.block].poolAllocator.allocate();
         assert(position.id != NoneIndex);
         return this.unitPositionToId(position);
     }
@@ -101,22 +103,27 @@ class ComponentAllocator(T)
     {
         UnitPosition position;
         position.fullIndex = id;
-        assert(position.block < this.mBlocks.length, "Id not created by ComponentAllocator");
+        assert(position.block < (cast(Array!ComponentsBlock) this.mBlocks)
+                .length, "Id not created by ComponentAllocator");
 
-        this.mBlocks[position.block].poolAllocator.deallocate(position.id);
+        (cast(Array!ComponentsBlock) this.mBlocks)[position.block].poolAllocator.deallocate(
+            position.id);
     }
 
     public void reduceMemoryUsage()
     {
-        if (this.mBlocks[this.mBlocks.length - 1].poolAllocator.allocated == 0)
+        if ((cast(Array!ComponentsBlock) this.mBlocks)[(cast(Array!ComponentsBlock) this.mBlocks)
+                .length - 1].poolAllocator.allocated == 0)
         {
             spinLocker.lock();
 
             {
-                while (this.mBlocks.length > 1 && this.mBlocks[this.mBlocks.length - 2].poolAllocator.allocated == 0)
+                while ((cast(Array!ComponentsBlock) this.mBlocks).length > 1 && (
+                        cast(Array!ComponentsBlock) this.mBlocks)[(cast(Array!ComponentsBlock) this.mBlocks)
+                            .length - 2].poolAllocator.allocated == 0)
                 {
-                    Delete(this.mBlocks[this.mBlocks.length - 1].poolAllocator);
-                    this.mBlocks.removeBack(1);
+                    Delete((cast(Array!ComponentsBlock)this.mBlocks)[(cast(Array!ComponentsBlock)this.mBlocks).length - 1].poolAllocator);
+                    (cast(Array!ComponentsBlock)this.mBlocks).removeBack(1);
                 }
             }
 
@@ -126,7 +133,7 @@ class ComponentAllocator(T)
 
     ~this()
     {
-        foreach (ref ComponentsBlock block; this.mBlocks)
+        foreach (ref ComponentsBlock block; (cast(Array!ComponentsBlock)this.mBlocks))
         {
             Delete(block.poolAllocator);
         }
@@ -136,7 +143,7 @@ class ComponentAllocator(T)
     public ref T opIndex(size_t id)
     {
         UnitPosition position = this.idToUnitPosition(id);
-        return this.mBlocks[position.block].poolAllocator[position.id];
+        return (cast(Array!ComponentsBlock)this.mBlocks)[position.block].poolAllocator[position.id];
     }
 
     private BlockAllocator mBlockAllocator;
@@ -209,4 +216,3 @@ unittest
         }
     }
 }
-

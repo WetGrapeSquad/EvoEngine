@@ -6,7 +6,7 @@ dlib.core.memory,
 dlib.container.array,
 core.internal.spinlock;
 
-class EntityManager
+shared class EntityManager
 {
     struct EntityData
     {

@@ -14,19 +14,20 @@ struct ComponentItem(T)
     T data;
 }
 
-interface IComponentArray
+shared interface IComponentArray
 {
     size_t create(size_t entity);
     void destroy(size_t componentId);
 }
 
-class ComponentArray(T) : IComponentArray
+shared class ComponentArray(T) : IComponentArray
 {
     alias ComponentItemType = ComponentItem!T;
 
     this(BlockAllocator allocator)
     {
-        this.mComponents = New!(ComponentAllocator!ComponentItemType)(allocator);
+        this.mComponents = cast(shared(ComponentAllocator!ComponentItemType)) New!(
+            ComponentAllocator!ComponentItemType)(allocator);
     }
 
     size_t create(size_t entity)
@@ -89,7 +90,7 @@ class ComponentArray(T) : IComponentArray
     ComponentAllocator!ComponentItemType mComponents;
 }
 
-class SizedComponentArray : IComponentArray
+shared class SizedComponentArray : IComponentArray
 {
     alias ComponentItemType = ComponentItem!(ubyte[]);
 
@@ -160,6 +161,7 @@ class SizedComponentArray : IComponentArray
 unittest
 {
     import std.range;
+
     struct TestStruct
     {
         int i = 0;
@@ -173,7 +175,6 @@ unittest
         Delete(componentArray);
         Delete(blockAllocator);
     }
-
 
     foreach (j; 100.iota.parallel)
     {

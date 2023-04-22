@@ -17,13 +17,13 @@ class ComponentManager
 
     size_t register(T)()
     {
-        return this.mComponentArrays.register(T.stringof, New!(ComponentArray!T)(
+        return this.mComponentArrays.register(T.stringof, New!(shared ComponentArray!T)(
                 this.mBlockAllocator));
     }
 
     size_t register(size_t size, string name)
     {
-        return this.mComponentArrays.register(name, New!(SizedComponentArray)(
+        return this.mComponentArrays.register(name, New!(shared SizedComponentArray)(
                 this.mBlockAllocator, size));
     }
 
@@ -72,15 +72,39 @@ class ComponentManager
         this.mComponentArrays[componentType].destroy(componentId);
     }
 
+    size_t getComponentType(T)()
+    {
+        return this.mComponentArrays.getId(T.stringof);
+    }
+
+    ref T get(T)(size_t componentId)
+    {   
+        IComponentArray componentArray = this.mComponentArrays[T.stringof];
+        return (cast(ComponentArray!T)componentArray)[componentId];
+    }
+
+    ref T get(T)(size_t componentType, size_t componentId)
+    {
+        IComponentArray componentArray = this.mComponentArrays[componentType];
+        return (cast(ComponentArray!T)componentArray)[componentId];
+    }
+
+    ubyte[] get(size_t componentType, size_t componentId)
+    {
+        IComponentArray componentArray = this.mComponentArrays[componentType];
+        return (cast(SizedComponentArray)componentArray)[componentId];
+    }
+
+
     ~this()
     {
-        foreach (ref IComponentArray element; this.mComponentArrays)
+        foreach (ref shared IComponentArray element; this.mComponentArrays)
         {
-            Delete(element);
+            Delete(cast(IComponentArray)element);
         }
     }
 
-    ClassRegistrator!IComponentArray mComponentArrays;
+    ClassRegistrator!(shared IComponentArray) mComponentArrays;
 
     size_t mLastId;
     BlockAllocator mBlockAllocator;
