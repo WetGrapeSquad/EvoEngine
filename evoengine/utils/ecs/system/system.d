@@ -1,6 +1,60 @@
 module evoengine.utils.ecs.system.system;
-private import evoengine.utils.ecs.system.parse;
+import evoengine.utils.ecs.component;
+import evoengine.utils.ecs.entity;
 import evoengine.utils.ecs.common;
+import evoengine.utils.ecs.system.common;
+import evoengine.utils.ecs.system.parse;
+import std.traits;
+import std.meta;
+
+template isEcsSystem(T)
+{
+    static if(!is(T == class) || is(T == Object))
+    {
+        enum isEcsSystem = false;
+    }
+    static if(is(T == IEcsSystem))
+    {
+        enum isEcsSystem = true;
+    }
+    else static if(!is(T == Object))
+    {
+        enum isEcsSystem = isEcsSystem!(BaseClassesTuple!(T)[0]);
+    }
+}
+
+template getEntityGroupsTypes(System)
+{
+    alias getEntityGroupsTypes = AliasSeq!();
+    static foreach(arg; FieldTypeTuple!(System))
+    {
+        static if(isInstanceOf!(EntityGroup, arg))
+        {
+            getEntityGroupsTypes = AliasSeq!(getEntityGroupsTypes, arg);
+        }
+    }
+}
+template getEntityGroupsNames(System)
+{
+    alias getEntityGroupsNames = AliasSeq!();
+    static foreach(i, arg; FieldNameTuple!(System))
+    {
+        static if(isInstanceOf!(EntityGroup, arg))
+        {
+            getEntityGroupsNames = AliasSeq!(getEntityGroupsNames, FieldNameTuple!System[i]);
+        }
+    }
+}
+
+/**
+* SystemSettings generate and contain all system settings in compile-time for SystemsController.
+*/
+struct SystemSettings(System)
+{
+    static assert(isEcsSystem!System, System.stringof ~ " is not inherited from IEcsSystem");
+    alias entityGroupTypes = getEntityGroupsTypes!System;
+    alias entityGroupNames = getEntityGroupsNames!System;
+}
 
 /// Abstract class for declaration all Systems in Ecs.
 abstract class IEcsSystem
@@ -15,18 +69,37 @@ abstract class IEcsSystem
     void destroy(SystemManager manager){}
 }
 
-/// SystemSettings contain all system settings for SystemsController. 
-struct SystemSettings
+unittest
 {
+    import std.stdio;
 
+    struct TestIncludeComponent1 {}
+    struct TestIncludeComponent2 {}
+    struct TestExcludeComponent {}
+    class TestSystem: IEcsSystem
+    {
+        EntityGroup!(
+            EntityInclude!(TestIncludeComponent1), 
+            EntityInclude!(TestIncludeComponent2),
+            EntityExclude!(TestExcludeComponent)
+            ) 
+        group1;
+    }
+
+    SystemSettings!(TestSystem) test;
+
+    static assert(is(test.entityGroupTypes[0].include == AliasSeq!(TestIncludeComponent1, TestIncludeComponent2)));
+    static assert(is(test.entityGroupTypes[0].exclude == AliasSeq!(TestExcludeComponent)));
 }
 
 class SystemManager
 {
+    this(EntityManager entityManager, ComponentManager componentManager)
+    {
+        this.mEntityManager = entityManager;
+        this.mComponentManager = componentManager;
+    }
 
-}
-
-class SystemsController
-{
-    
+    private EntityManager mEntityManager;
+    private ComponentManager mComponentManager;
 }
