@@ -1,0 +1,6 @@
+language: d
+dist: trusty
+d:
+  - dmd
+  - gdc
+  - ldc
